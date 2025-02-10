@@ -3,17 +3,15 @@ package com.desafio.casepixitau.model;
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
 import java.util.UUID;
-import jakarta.persistence.Version;
 
 /**
  * Representa uma chave Pix cadastrada no sistema.
  */
 @Entity
-@Table(name = "tb_chavespix")
 public class ChavePix {
 
     @Id
-    @GeneratedValue(strategy= GenerationType.AUTO)
+    @GeneratedValue
     private UUID id; // Identificador único da chave Pix
 
     @Column(nullable = false)
@@ -34,15 +32,14 @@ public class ChavePix {
     @Column(nullable = false)
     private String nomeCorrentista; // Nome do titular da conta
 
-    private String sobrenomeCorrentista; // Sobrenome do titular da conta
+    private String sobrenomeCorrentista; // Sobrenome do titular da conta (opcional para pessoas jurídicas)
 
     @Column(nullable = false)
     private LocalDateTime dataHoraInclusao; // Data e hora de criação do registro
 
     private LocalDateTime dataHoraInativacao; // Data e hora da inativação da chave (caso tenha sido desativada)
 
-    @Version
-    private Long version;  // Campo para controle de versão. Adicionado para que o Hibernate possa controlar corretamente as alterações concorrentes.
+    // Getters e Setters
 
     public UUID getId() {
         return id;
@@ -123,31 +120,5 @@ public class ChavePix {
     public void setDataHoraInativacao(LocalDateTime dataHoraInativacao) {
         this.dataHoraInativacao = dataHoraInativacao;
     }
-
-    public Long getVersion() {
-        return version;
-    }
-
-    public void setVersion(Long version) {
-        this.version = version;
-    }
-
-    @Override
-    public String toString() {
-        return "ChavePix{" +
-                "id=" + id +
-                ", tipoChave='" + tipoChave + '\'' +
-                ", valorChave='" + valorChave + '\'' +
-                ", tipoConta='" + tipoConta + '\'' +
-                ", numeroAgencia=" + numeroAgencia +
-                ", numeroConta=" + numeroConta +
-                ", nomeCorrentista='" + nomeCorrentista + '\'' +
-                ", sobrenomeCorrentista='" + sobrenomeCorrentista + '\'' +
-                ", dataHoraInclusao=" + dataHoraInclusao +
-                ", dataHoraInativacao=" + dataHoraInativacao +
-                ", version=" + version +
-                '}';
-    }
-
 }
 
