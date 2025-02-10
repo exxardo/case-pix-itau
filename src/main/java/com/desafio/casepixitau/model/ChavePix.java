@@ -32,14 +32,12 @@ public class ChavePix {
     @Column(nullable = false)
     private String nomeCorrentista; // Nome do titular da conta
 
-    private String sobrenomeCorrentista; // Sobrenome do titular da conta (opcional para pessoas jurídicas)
+    private String sobrenomeCorrentista; // Sobrenome do titular da conta
 
     @Column(nullable = false)
     private LocalDateTime dataHoraInclusao; // Data e hora de criação do registro
 
     private LocalDateTime dataHoraInativacao; // Data e hora da inativação da chave (caso tenha sido desativada)
-
-    // Getters e Setters
 
     public UUID getId() {
         return id;
