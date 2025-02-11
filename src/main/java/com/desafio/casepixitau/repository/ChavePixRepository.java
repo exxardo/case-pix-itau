@@ -1,24 +1,43 @@
 package com.desafio.casepixitau.repository;
 
 import com.desafio.casepixitau.model.ChavePix;
-import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.stereotype.Repository;
-
 import java.util.Optional;
 import java.util.UUID;
 
 /**
- * Repositório responsável por operações de persistência da entidade ChavePix.
- * Extende JpaRepository para fornecer operações CRUD padrão.
+ * Interface que define as operações para manipulação das chaves Pix.
+ * Pode ser implementada por diferentes repositórios para fornecer persistência.
  */
-@Repository
-public interface ChavePixRepository extends JpaRepository<ChavePix, UUID> {
+public interface ChavePixRepository {
 
     /**
-     * Busca uma ChavePix pelo seu valor único.
+     * Busca uma chave Pix pelo seu ID.
      *
-     * @param valorChave o valor da chave Pix a ser buscado.
-     * @return um Optional contendo a ChavePix, caso exista.
+     * @param id Identificador único da chave Pix.
+     * @return Um Optional contendo a chave Pix, se encontrada.
+     */
+    Optional<ChavePix> findById(UUID id);
+
+    /**
+     * Busca uma chave Pix pelo seu valor.
+     *
+     * @param valorChave O valor da chave Pix.
+     * @return Um Optional contendo a chave Pix, se encontrada.
      */
     Optional<ChavePix> findByValorChave(String valorChave);
+
+    /**
+     * Salva uma chave Pix no repositório.
+     *
+     * @param chavePix Objeto ChavePix a ser salvo.
+     * @return A chave Pix persistida.
+     */
+    ChavePix save(ChavePix chavePix);
+
+    /**
+     * Remove uma chave Pix pelo seu ID.
+     *
+     * @param id Identificador único da chave Pix a ser removida.
+     */
+    void deleteById(UUID id);
 }
