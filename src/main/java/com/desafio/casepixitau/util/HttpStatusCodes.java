@@ -3,22 +3,18 @@ package com.desafio.casepixitau.util;
 import org.springframework.http.HttpStatus;
 
 /**
- * Classe utilitária que centraliza os códigos de status HTTP usados na aplicação.
- * Não deve ser instanciada.
+ * Classe utilitária para centralizar os códigos de status HTTP utilizados na aplicação.
  */
-public final class HttpStatusCodes {
+public class HttpStatusCodes {
 
-    public static final HttpStatus SUCCESS = HttpStatus.OK;
-    public static final HttpStatus UNPROCESSABLE_ENTITY = HttpStatus.UNPROCESSABLE_ENTITY;
-    public static final HttpStatus NOT_FOUND = HttpStatus.NOT_FOUND;
-    public static final HttpStatus BAD_REQUEST = HttpStatus.BAD_REQUEST;
+    // Códigos de sucesso
+    public static final HttpStatus SUCCESS = HttpStatus.OK; // 200
 
-    /**
-     * Construtor privado para evitar instanciamento da classe.
-     * Lança uma UnsupportedOperationException caso alguém tente instanciar.
-     */
+    // Códigos de erro para validações
+    public static final HttpStatus UNPROCESSABLE_ENTITY = HttpStatus.UNPROCESSABLE_ENTITY; // 422
+    public static final HttpStatus NOT_FOUND = HttpStatus.NOT_FOUND; // 404
+
     private HttpStatusCodes() {
-        throw new UnsupportedOperationException("Classe utilitária não pode ser instanciada.");
+        // Construtor privado para evitar instanciação
     }
 }
-
