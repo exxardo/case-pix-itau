@@ -41,8 +41,10 @@ public class ChavePixService {
     public ChavePixResponseDTO incluir(ChavePixRequestDTO dto) {
         validarChaveUnica(dto.getValorChave()); // Valida se a chave é única.
         validarLimiteDeChaves(dto); // Valida se o limite de chaves foi atingido.
+        validarFormatoChave(dto);  // Valida o formato da chave conforme o tipo.
 
         ChavePix chavePix = new ChavePix();
+        chavePix.setId(UUID.randomUUID()); // Gera e define o ID no formato UUID.
         chavePix.setTipoChave(dto.getTipoChave());
         chavePix.setValorChave(dto.getValorChave());
         chavePix.setTipoConta(dto.getTipoConta());
@@ -205,6 +207,49 @@ public class ChavePixService {
     }
 
     /**
+     * Valida o formato da chave conforme o tipo (CPF, e-mail, celular).
+     *
+     * @param dto o DTO contendo os dados da chave Pix a ser validada.
+     */
+    private void validarFormatoChave(ChavePixRequestDTO dto) {
+        String tipoChave = dto.getTipoChave().toLowerCase();
+        String valorChave = dto.getValorChave();
+
+        switch (tipoChave) {
+            case "cpf":
+                if (!valorChave.matches("\\d{11}")) {
+                    throw new ChavePixException("CPF inválido.");
+                }
+                if (!validarCPF(valorChave)) {
+                    throw new ChavePixException("CPF inválido.");
+                }
+                break;
+            case "email":
+                if (!valorChave.contains("@") || valorChave.length() > 77) {
+                    throw new ChavePixException("E-mail inválido.");
+                }
+                break;
+            case "celular":
+                if (!valorChave.matches("\\+\\d{1,2}\\d{2,3}\\d{9}")) {
+                    throw new ChavePixException("Celular inválido: deve conter o código do país iniciando com '+'.");
+                }
+                break;
+            default:
+                throw new ChavePixException("Tipo de chave inválido.");
+        }
+    }
+
+    /**
+     * Validação simplificada de CPF.
+     * @param cpf o número do CPF a ser validado.
+     * @return true se o CPF for válido, false caso contrário.
+     */
+    private boolean validarCPF(String cpf) {
+        // Implementação simplificada para fins de teste.
+        return !cpf.chars().allMatch(ch -> ch == cpf.charAt(0)); // Evita CPFs com todos os dígitos iguais.
+    }
+
+    /**
      * Converte uma entidade Chave Pix em um objeto DTO para uso externo.
      *
      * @param chave a entidade a ser convertida.
@@ -212,8 +257,6 @@ public class ChavePixService {
      */
     private ChavePixResponseDTO toResponseDTO(ChavePix chave) {
         ChavePixResponseDTO dto = new ChavePixResponseDTO();
-
-        // Mapeia os atributos relevantes
         dto.setId(chave.getId());
         dto.setTipoChave(chave.getTipoChave());
         dto.setValorChave(chave.getValorChave());
