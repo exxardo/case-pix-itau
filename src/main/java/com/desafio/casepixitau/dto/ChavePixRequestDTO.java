@@ -11,26 +11,24 @@ import lombok.Data;
 public class ChavePixRequestDTO {
 
     /**
-     * Tipo da chave Pix (email, CPF ou celular).
-     * Deve ser um desses valores.
+     * Tipo da chave Pix (e-mail, CPF, CNPJ, telefone, etc.).
+     * Não pode estar em branco.
      */
     @NotBlank(message = "Tipo da chave é obrigatório.")
-    @Pattern(regexp = "email|cpf|celular", message = "O tipo da chave deve ser 'email', 'cpf' ou 'celular'.")
     private String tipoChave;
 
     /**
-     * Valor da chave Pix.
-     * Deve seguir um formato válido de acordo com o tipo da chave.
+     * Valor da chave Pix, que deve ser único.
+     * Não pode estar em branco.
      */
     @NotBlank(message = "Valor da chave é obrigatório.")
     private String valorChave;
 
     /**
      * Tipo de conta associada à chave Pix (corrente ou poupança).
-     * Não pode estar em branco e deve ser 'corrente' ou 'poupança'.
+     * Não pode estar em branco.
      */
     @NotBlank(message = "Tipo da conta é obrigatório.")
-    @Pattern(regexp = "corrente|poupança", message = "O tipo de conta deve ser 'corrente' ou 'poupança'.")
     private String tipoConta;
 
     /**
@@ -60,15 +58,4 @@ public class ChavePixRequestDTO {
      * Sobrenome do titular da conta (opcional).
      */
     private String sobrenomeCorrentista;
-
-    /**
-     * Validação personalizada para garantir que o email esteja no formato correto quando o tipoChave for 'email'.
-     */
-    @AssertTrue(message = "Formato de email inválido.")
-    public boolean isEmailValid() {
-        if ("email".equalsIgnoreCase(tipoChave)) {
-            return valorChave != null && valorChave.matches("^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+$");
-        }
-        return true;
-    }
 }
