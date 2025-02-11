@@ -1,6 +1,8 @@
 package com.desafio.casepixitau.repository;
 
 import com.desafio.casepixitau.model.ChavePix;
+import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -25,6 +27,50 @@ public interface ChavePixRepository {
      * @return Um Optional contendo a chave Pix, se encontrada.
      */
     Optional<ChavePix> findByValorChave(String valorChave);
+
+    /**
+     * Busca chaves Pix pelo tipo de chave.
+     *
+     * @param tipoChave Tipo da chave Pix.
+     * @return Lista de chaves Pix do tipo especificado.
+     */
+    List<ChavePix> findByTipoChave(String tipoChave);
+
+    /**
+     * Busca chaves Pix pela agência e conta.
+     *
+     * @param numeroAgencia Número da agência.
+     * @param numeroConta Número da conta.
+     * @return Lista de chaves Pix que correspondem à agência e conta informadas.
+     */
+    List<ChavePix> findByNumeroAgenciaAndNumeroConta(int numeroAgencia, int numeroConta);
+
+    /**
+     * Busca chaves Pix pela data de inclusão.
+     *
+     * @param inicio Data e hora inicial.
+     * @param fim Data e hora final.
+     * @return Lista de chaves Pix incluídas no período especificado.
+     */
+    List<ChavePix> findByDataHoraInclusaoBetween(LocalDateTime inicio, LocalDateTime fim);
+
+    /**
+     * Busca chaves Pix pela data de inativação.
+     *
+     * @param inicio Data e hora inicial.
+     * @param fim Data e hora final.
+     * @return Lista de chaves Pix inativadas no período especificado.
+     */
+    List<ChavePix> findByDataHoraInativacaoBetween(LocalDateTime inicio, LocalDateTime fim);
+
+    /**
+     * Conta a quantidade de chaves para uma agência e conta.
+     *
+     * @param numeroAgencia Número da agência.
+     * @param numeroConta Número da conta.
+     * @return Quantidade de chaves associadas à agência e conta.
+     */
+    long countByNumeroAgenciaAndNumeroConta(int numeroAgencia, int numeroConta);
 
     /**
      * Salva uma chave Pix no repositório.
