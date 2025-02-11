@@ -15,8 +15,8 @@ import java.util.UUID;
 import java.util.stream.Collectors;
 
 /**
- * Service class responsible for managing Pix keys (Chave Pix).
- * Provides methods for creating, retrieving, updating, and deactivating Pix keys.
+ * Classe de serviço responsável pelo gerenciamento de chaves Pix.
+ * Fornece métodos para criar, consultar, atualizar e inativar chaves Pix.
  */
 @Service
 public class ChavePixService {
@@ -24,23 +24,23 @@ public class ChavePixService {
     private final ChavePixRepository repository;
 
     /**
-     * Constructor to inject the repository dependency.
+     * Construtor para injeção de dependência do repositório.
      *
-     * @param repository the repository for managing Chave Pix entities.
+     * @param repository o repositório para gerenciar as entidades de Chave Pix.
      */
     public ChavePixService(ChavePixRepository repository) {
         this.repository = repository;
     }
 
     /**
-     * Creates and saves a new Pix key.
+     * Cria e salva uma nova chave Pix.
      *
-     * @param dto the request DTO containing the key details.
-     * @return a response DTO with the saved key details.
+     * @param dto o DTO contendo os detalhes da chave Pix a ser criada.
+     * @return um DTO de resposta com os detalhes da chave salva.
      */
     public ChavePixResponseDTO incluir(ChavePixRequestDTO dto) {
-        validarChaveUnica(dto.getValorChave()); // Validates if the key is unique.
-        validarLimiteDeChaves(dto); // Validates if the account has reached its key limit.
+        validarChaveUnica(dto.getValorChave()); // Valida se a chave é única.
+        validarLimiteDeChaves(dto); // Valida se o limite de chaves foi atingido.
 
         ChavePix chavePix = new ChavePix();
         chavePix.setTipoChave(dto.getTipoChave());
@@ -50,30 +50,30 @@ public class ChavePixService {
         chavePix.setNumeroConta(dto.getNumeroConta());
         chavePix.setNomeCorrentista(dto.getNomeCorrentista());
         chavePix.setSobrenomeCorrentista(dto.getSobrenomeCorrentista());
-        chavePix.setDataHoraInclusao(LocalDateTime.now()); // Sets the creation timestamp.
+        chavePix.setDataHoraInclusao(LocalDateTime.now()); // Define a data/hora de inclusão.
 
-        repository.save(chavePix); // Persists the Pix key.
+        repository.save(chavePix); // Persiste a nova chave Pix.
 
         return toResponseDTO(chavePix);
     }
 
     /**
-     * Retrieves a Pix key by its ID.
+     * Consulta uma chave Pix pelo seu ID.
      *
-     * @param id the unique identifier of the Pix key.
-     * @return a response DTO with the key details.
+     * @param id o identificador único da chave Pix.
+     * @return um DTO de resposta com os detalhes da chave encontrada.
      */
     public ChavePixResponseDTO consultarPorId(UUID id) {
         ChavePix chave = repository.findById(id)
-                .orElseThrow(() -> new ChavePixException("Chave Pix não encontrada.")); // Throws exception if not found.
+                .orElseThrow(() -> new ChavePixException("Chave Pix não encontrada.")); // Lança exceção caso não encontre.
         return toResponseDTO(chave);
     }
 
     /**
-     * Retrieves all Pix keys of a specific type.
+     * Consulta todas as chaves Pix de um tipo específico.
      *
-     * @param tipoChave the type of the Pix key (e.g., CPF, email).
-     * @return a list of response DTOs with the matching keys' details.
+     * @param tipoChave o tipo da chave Pix (ex.: CPF, e-mail).
+     * @return uma lista de DTOs de resposta com os detalhes das chaves encontradas.
      */
     public List<ChavePixResponseDTO> consultarPorTipoChave(String tipoChave) {
         List<ChavePix> chaves = repository.findByTipoChave(tipoChave);
@@ -83,11 +83,11 @@ public class ChavePixService {
     }
 
     /**
-     * Retrieves all Pix keys associated with a specific agency and account number.
+     * Consulta todas as chaves Pix associadas a uma agência e conta específicas.
      *
-     * @param agencia the agency number.
-     * @param conta   the account number.
-     * @return a list of response DTOs with the matching keys' details.
+     * @param agencia o número da agência.
+     * @param conta   o número da conta.
+     * @return uma lista de DTOs de resposta com os detalhes das chaves encontradas.
      */
     public List<ChavePixResponseDTO> consultarPorAgenciaEConta(int agencia, int conta) {
         List<ChavePix> chaves = repository.findByNumeroAgenciaAndNumeroConta(agencia, conta);
@@ -97,11 +97,11 @@ public class ChavePixService {
     }
 
     /**
-     * Retrieves all Pix keys created or deactivated within a specific date range.
+     * Consulta todas as chaves Pix criadas ou inativadas dentro de um intervalo de datas.
      *
-     * @param dataInclusao   inclusion date for filtering (optional).
-     * @param dataInativacao deactivation date for filtering (optional).
-     * @return a list of response DTOs with the matching keys' details.
+     * @param dataInclusao   data de inclusão para filtro (opcional).
+     * @param dataInativacao data de inativação para filtro (opcional).
+     * @return uma lista de DTOs de resposta com os detalhes das chaves encontradas.
      */
     public List<ChavePixResponseDTO> consultarPorData(LocalDate dataInclusao, LocalDate dataInativacao) {
         List<ChavePix> chaves;
@@ -126,20 +126,21 @@ public class ChavePixService {
     }
 
     /**
-     * Updates an existing active Pix key's details.
+     * Atualiza os dados de uma chave Pix ativa existente.
      *
-     * @param id  the unique identifier of the Pix key to update.
-     * @param dto the request DTO containing updated details.
-     * @return a response DTO with updated key details.
+     * @param id  o identificador único da chave a ser atualizada.
+     * @param dto o DTO contendo os novos dados da chave Pix.
+     * @return um DTO de resposta com os dados atualizados da chave Pix.
      */
     public ChavePixResponseDTO alterar(UUID id, ChavePixRequestDTO dto) {
         ChavePix chaveExistente = repository.findById(id)
                 .orElseThrow(() -> new ChavePixException("Chave Pix não encontrada."));
 
-        if (chaveExistente.getDataHoraInativacao() != null) { // Checks if the key is inactive.
+        if (chaveExistente.getDataHoraInativacao() != null) { // Verifica se a chave está inativa.
             throw new ChavePixException("Não é possível alterar uma chave inativa.");
         }
 
+        // Atualiza os dados da entidade existente
         chaveExistente.setTipoConta(dto.getTipoConta());
         chaveExistente.setNumeroAgencia(dto.getNumeroAgencia());
         chaveExistente.setNumeroConta(dto.getNumeroConta());
@@ -152,29 +153,30 @@ public class ChavePixService {
     }
 
     /**
-     * Deactivates an existing active Pix key by setting its deactivation timestamp.
+     * Inativa uma chave Pix ativa existente, definindo a data/hora de inativação.
      *
-     * @param id the unique identifier of the Pix key to deactivate.
-     * @return a response DTO with updated key details.
+     * @param id o identificador único da chave a ser inativada.
+     * @return um DTO de resposta com os dados atualizados da chave inativada.
      */
     public ChavePixResponseDTO inativar(UUID id) {
         ChavePix chave = repository.findById(id)
                 .orElseThrow(() -> new ChavePixException("Chave Pix não encontrada."));
 
-        if (chave.getDataHoraInativacao() != null) { // Checks if already inactive.
+        if (chave.getDataHoraInativacao() != null) { // Verifica se já está inativa.
             throw new ChavePixException("A chave já está inativa.");
         }
 
-        chave.setDataHoraInativacao(LocalDateTime.now()); // Sets deactivation timestamp.
+        // Define a data/hora de inativação
+        chave.setDataHoraInativacao(LocalDateTime.now());
         repository.save(chave);
 
         return toResponseDTO(chave);
     }
 
     /**
-     * Validates that a given Pix key value is unique in the system.
+     * Valida que o valor informado para a chave Pix é único no sistema.
      *
-     * @param valorChave the value of the Pix key to validate.
+     * @param valorChave o valor da chave Pix a ser validado.
      */
     private void validarChaveUnica(String valorChave) {
         Optional<ChavePix> existente = repository.findByValorChave(valorChave);
@@ -184,9 +186,9 @@ public class ChavePixService {
     }
 
     /**
-     * Validates that an account has not exceeded its allowed number of Pix keys based on account type.
+     * Valida que uma conta não excedeu o limite permitido de chaves Pix, baseado no tipo da conta.
      *
-     * @param dto the request DTO containing account details for validation.
+     * @param dto o DTO contendo os dados da conta para validação.
      */
     private void validarLimiteDeChaves(ChavePixRequestDTO dto) {
         long quantidadeDeChaves = repository.countByNumeroAgenciaAndNumeroConta(
@@ -203,13 +205,15 @@ public class ChavePixService {
     }
 
     /**
-     * Converts a Chave Pix entity into a response DTO object for external usage.
+     * Converte uma entidade Chave Pix em um objeto DTO para uso externo.
      *
-     * @param chave the entity to convert.
-     * @return a response DTO with corresponding details from the entity.
+     * @param chave a entidade a ser convertida.
+     * @return um DTO contendo os detalhes correspondentes à entidade fornecida.
      */
     private ChavePixResponseDTO toResponseDTO(ChavePix chave) {
         ChavePixResponseDTO dto = new ChavePixResponseDTO();
+
+        // Mapeia os atributos relevantes
         dto.setId(chave.getId());
         dto.setTipoChave(chave.getTipoChave());
         dto.setValorChave(chave.getValorChave());
@@ -220,7 +224,6 @@ public class ChavePixService {
         dto.setSobrenomeCorrentista(chave.getSobrenomeCorrentista());
         dto.setDataHoraInclusao(chave.getDataHoraInclusao());
 
-        // Note: DataHoraInativacao is intentionally excluded from conversion
         return dto;
     }
 }
