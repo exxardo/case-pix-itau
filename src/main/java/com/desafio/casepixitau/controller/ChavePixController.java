@@ -2,7 +2,9 @@ package com.desafio.casepixitau.controller;
 
 import com.desafio.casepixitau.dto.ChavePixRequestDTO;
 import com.desafio.casepixitau.dto.ChavePixResponseDTO;
+import com.desafio.casepixitau.exception.ChavePixException;
 import com.desafio.casepixitau.service.ChavePixService;
+import com.desafio.casepixitau.util.HttpStatusCodes;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -29,8 +31,13 @@ public class ChavePixController {
      */
     @PostMapping
     public ResponseEntity<ChavePixResponseDTO> incluir(@Valid @RequestBody ChavePixRequestDTO dto) {
-        ChavePixResponseDTO response = service.incluir(dto);
-        return ResponseEntity.ok(response);
+        try {
+            ChavePixResponseDTO response = service.incluir(dto);
+            return ResponseEntity.status(HttpStatusCodes.SUCCESS).body(response);
+        } catch (ChavePixException e) {
+            return ResponseEntity.status(HttpStatusCodes.UNPROCESSABLE_ENTITY)
+                    .body(null);
+        }
     }
 
     /**
@@ -44,8 +51,15 @@ public class ChavePixController {
     public ResponseEntity<ChavePixResponseDTO> alterar(
             @PathVariable UUID id,
             @Valid @RequestBody ChavePixRequestDTO dto) {
-        ChavePixResponseDTO response = service.alterar(id, dto);
-        return ResponseEntity.ok(response);
+        try {
+            ChavePixResponseDTO response = service.alterar(id, dto);
+            return ResponseEntity.status(HttpStatusCodes.SUCCESS).body(response);
+        } catch (ChavePixException e) {
+            return ResponseEntity.status(HttpStatusCodes.UNPROCESSABLE_ENTITY)
+                    .body(null);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatusCodes.NOT_FOUND).body(null);
+        }
     }
 
     /**
@@ -56,8 +70,13 @@ public class ChavePixController {
      */
     @DeleteMapping("/{id}")
     public ResponseEntity<ChavePixResponseDTO> inativar(@PathVariable UUID id) {
-        ChavePixResponseDTO response = service.inativar(id);
-        return ResponseEntity.ok(response);
+        try {
+            ChavePixResponseDTO response = service.inativar(id);
+            return ResponseEntity.status(HttpStatusCodes.SUCCESS).body(response);
+        } catch (ChavePixException e) {
+            return ResponseEntity.status(HttpStatusCodes.UNPROCESSABLE_ENTITY)
+                    .body(null);
+        }
     }
 
     /**
@@ -68,8 +87,12 @@ public class ChavePixController {
      */
     @GetMapping("/{id}")
     public ResponseEntity<ChavePixResponseDTO> consultarPorId(@PathVariable UUID id) {
-        ChavePixResponseDTO response = service.consultarPorId(id);
-        return ResponseEntity.ok(response);
+        try {
+            ChavePixResponseDTO response = service.consultarPorId(id);
+            return ResponseEntity.status(HttpStatusCodes.SUCCESS).body(response);
+        } catch (ChavePixException e) {
+            return ResponseEntity.status(HttpStatusCodes.NOT_FOUND).body(null);
+        }
     }
 
     /**
@@ -82,7 +105,7 @@ public class ChavePixController {
     public ResponseEntity<List<ChavePixResponseDTO>> consultarPorTipoChave(
             @RequestParam("tipo") String tipoChave) {
         List<ChavePixResponseDTO> response = service.consultarPorTipoChave(tipoChave);
-        return ResponseEntity.ok(response);
+        return ResponseEntity.status(HttpStatusCodes.SUCCESS).body(response);
     }
 
     /**
@@ -97,7 +120,7 @@ public class ChavePixController {
             @RequestParam("agencia") int agencia,
             @RequestParam("conta") int conta) {
         List<ChavePixResponseDTO> response = service.consultarPorAgenciaEConta(agencia, conta);
-        return ResponseEntity.ok(response);
+        return ResponseEntity.status(HttpStatusCodes.SUCCESS).body(response);
     }
 
     /**
@@ -112,10 +135,10 @@ public class ChavePixController {
             @RequestParam(value = "dataInclusao", required = false) LocalDate dataInclusao,
             @RequestParam(value = "dataInativacao", required = false) LocalDate dataInativacao) {
         if (dataInclusao != null && dataInativacao != null) {
-            return ResponseEntity.unprocessableEntity()
-                    .body(null); // Mensagem: Não é permitido combinar filtros de data de inclusão e inativação
+            return ResponseEntity.status(HttpStatusCodes.UNPROCESSABLE_ENTITY)
+                    .body(null); // Não é permitido combinar filtros de data de inclusão e inativação
         }
         List<ChavePixResponseDTO> response = service.consultarPorData(dataInclusao, dataInativacao);
-        return ResponseEntity.ok(response);
+        return ResponseEntity.status(HttpStatusCodes.SUCCESS).body(response);
     }
 }
