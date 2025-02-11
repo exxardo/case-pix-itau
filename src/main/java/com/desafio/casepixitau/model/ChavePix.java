@@ -9,10 +9,11 @@ import jakarta.persistence.Version;
  * Representa uma chave Pix cadastrada no sistema.
  */
 @Entity
+@Table(name = "tb_chavespix")
 public class ChavePix {
 
     @Id
-    @GeneratedValue
+    @GeneratedValue(strategy= GenerationType.AUTO)
     private UUID id; // Identificador único da chave Pix
 
     @Column(nullable = false)
