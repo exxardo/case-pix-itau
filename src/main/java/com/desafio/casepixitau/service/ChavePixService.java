@@ -44,7 +44,8 @@ public class ChavePixService {
         validarFormatoChave(dto);  // Valida o formato da chave conforme o tipo.
 
         ChavePix chavePix = new ChavePix();
-        chavePix.setId(UUID.randomUUID()); // Gera e define o ID no formato UUID.
+        // Remover a atribuição manual do ID, o Hibernate será responsável por gerar o UUID
+
         chavePix.setTipoChave(dto.getTipoChave());
         chavePix.setValorChave(dto.getValorChave());
         chavePix.setTipoConta(dto.getTipoConta());
@@ -54,9 +55,9 @@ public class ChavePixService {
         chavePix.setSobrenomeCorrentista(dto.getSobrenomeCorrentista());
         chavePix.setDataHoraInclusao(LocalDateTime.now()); // Define a data/hora de inclusão.
 
-        repository.save(chavePix); // Persiste a nova chave Pix.
+        ChavePix savedChavePix = repository.save(chavePix); // Persiste a nova chave Pix.
 
-        return toResponseDTO(chavePix);
+        return toResponseDTO(savedChavePix);
     }
 
     /**
@@ -67,7 +68,7 @@ public class ChavePixService {
      */
     public ChavePixResponseDTO consultarPorId(UUID id) {
         ChavePix chave = repository.findById(id)
-                .orElseThrow(() -> new ChavePixException("Chave Pix não encontrada.")); // Lança exceção caso não encontre.
+                .orElseThrow(() -> new ChavePixException("Chave Pix não encontrada.")); // Lça exceção caso não encontre.
         return toResponseDTO(chave);
     }
 
@@ -149,9 +150,9 @@ public class ChavePixService {
         chaveExistente.setNomeCorrentista(dto.getNomeCorrentista());
         chaveExistente.setSobrenomeCorrentista(dto.getSobrenomeCorrentista());
 
-        repository.save(chaveExistente);
+        ChavePix updatedChavePix = repository.save(chaveExistente);
 
-        return toResponseDTO(chaveExistente);
+        return toResponseDTO(updatedChavePix);
     }
 
     /**
@@ -170,9 +171,9 @@ public class ChavePixService {
 
         // Define a data/hora de inativação
         chave.setDataHoraInativacao(LocalDateTime.now());
-        repository.save(chave);
+        ChavePix inactivatedChavePix = repository.save(chave);
 
-        return toResponseDTO(chave);
+        return toResponseDTO(inactivatedChavePix);
     }
 
     /**

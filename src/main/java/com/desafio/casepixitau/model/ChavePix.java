@@ -3,6 +3,7 @@ package com.desafio.casepixitau.model;
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
 import java.util.UUID;
+import jakarta.persistence.Version;
 
 /**
  * Representa uma chave Pix cadastrada no sistema.
@@ -38,6 +39,9 @@ public class ChavePix {
     private LocalDateTime dataHoraInclusao; // Data e hora de criação do registro
 
     private LocalDateTime dataHoraInativacao; // Data e hora da inativação da chave (caso tenha sido desativada)
+
+    @Version
+    private Long version;  // Campo para controle de versão. Adicionado para que o Hibernate possa controlar corretamente as alterações concorrentes.
 
     public UUID getId() {
         return id;
@@ -117,6 +121,14 @@ public class ChavePix {
 
     public void setDataHoraInativacao(LocalDateTime dataHoraInativacao) {
         this.dataHoraInativacao = dataHoraInativacao;
+    }
+
+    public Long getVersion() {
+        return version;
+    }
+
+    public void setVersion(Long version) {
+        this.version = version;
     }
 }
 
