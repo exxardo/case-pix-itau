@@ -1,13 +1,13 @@
 package com.desafio.casepixitau.dto;
 
+import lombok.AllArgsConstructor;
 import lombok.Data;
 
+/**
+ * DTO para representar mensagens de erro.
+ */
 @Data
+@AllArgsConstructor
 public class ErrorResponseDTO {
-
-    private String errorMessage;
-
-    public ErrorResponseDTO(String errorMessage) {
-        this.errorMessage = errorMessage;
-    }
+    private String mensagem;
 }

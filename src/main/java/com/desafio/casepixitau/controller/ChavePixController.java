@@ -2,6 +2,7 @@ package com.desafio.casepixitau.controller;
 
 import com.desafio.casepixitau.dto.ChavePixRequestDTO;
 import com.desafio.casepixitau.dto.ChavePixResponseDTO;
+import com.desafio.casepixitau.dto.ErrorResponseDTO;
 import com.desafio.casepixitau.exception.ChavePixException;
 import com.desafio.casepixitau.service.ChavePixService;
 import com.desafio.casepixitau.util.HttpStatusCodes;
@@ -69,14 +70,16 @@ public class ChavePixController {
      * @return Resposta contendo os dados da chave inativada.
      */
     @DeleteMapping("/{id}")
-    public ResponseEntity<ChavePixResponseDTO> inativar(@PathVariable UUID id) {
+    public ResponseEntity<?> inativar(@PathVariable UUID id) {
         try {
             ChavePixResponseDTO response = service.inativar(id);
-            return ResponseEntity.status(HttpStatusCodes.SUCCESS).body(response);  // Retorna com data de inativação
+            return ResponseEntity.status(HttpStatusCodes.SUCCESS).body(response);
         } catch (ChavePixException e) {
-            return ResponseEntity.status(HttpStatusCodes.UNPROCESSABLE_ENTITY).body(null);
+            return ResponseEntity.status(HttpStatusCodes.UNPROCESSABLE_ENTITY)
+                    .body(new ErrorResponseDTO(e.getMessage()));
         }
     }
+
 
     /**
      * Consulta uma chave PIX pelo ID.
