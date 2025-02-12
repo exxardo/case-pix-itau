@@ -44,8 +44,6 @@ public class ChavePixService {
         validarFormatoChave(dto);  // Valida o formato da chave conforme o tipo.
 
         ChavePix chavePix = new ChavePix();
-        // Remover a atribuição manual do ID, o Hibernate será responsável por gerar o UUID
-
         chavePix.setTipoChave(dto.getTipoChave());
         chavePix.setValorChave(dto.getValorChave());
         chavePix.setTipoConta(dto.getTipoConta());
@@ -68,7 +66,7 @@ public class ChavePixService {
      */
     public ChavePixResponseDTO consultarPorId(UUID id) {
         ChavePix chave = repository.findById(id)
-                .orElseThrow(() -> new ChavePixException("Chave Pix não encontrada.")); // Lça exceção caso não encontre.
+                .orElseThrow(() -> new ChavePixException("Chave Pix não encontrada."));
         return toResponseDTO(chave);
     }
 
@@ -109,7 +107,9 @@ public class ChavePixService {
     public List<ChavePixResponseDTO> consultarPorData(LocalDate dataInclusao, LocalDate dataInativacao) {
         List<ChavePix> chaves;
 
-        if (dataInclusao != null) {
+        if (dataInclusao != null && dataInativacao != null) {
+            throw new ChavePixException("Não é permitido informar ambas as datas.");
+        } else if (dataInclusao != null) {
             chaves = repository.findByDataHoraInclusaoBetween(
                     dataInclusao.atStartOfDay(),
                     dataInclusao.plusDays(1).atStartOfDay()
@@ -139,11 +139,10 @@ public class ChavePixService {
         ChavePix chaveExistente = repository.findById(id)
                 .orElseThrow(() -> new ChavePixException("Chave Pix não encontrada."));
 
-        if (chaveExistente.getDataHoraInativacao() != null) { // Verifica se a chave está inativa.
+        if (chaveExistente.getDataHoraInativacao() != null) {
             throw new ChavePixException("Não é possível alterar uma chave inativa.");
         }
 
-        // Atualiza os dados da entidade existente
         chaveExistente.setTipoConta(dto.getTipoConta());
         chaveExistente.setNumeroAgencia(dto.getNumeroAgencia());
         chaveExistente.setNumeroConta(dto.getNumeroConta());
@@ -156,7 +155,7 @@ public class ChavePixService {
     }
 
     /**
-     * Inativa uma chave Pix ativa existente, definindo a data/hora de inativação.
+     * Inativa uma chave Pix ativa existente.
      *
      * @param id o identificador único da chave a ser inativada.
      * @return um DTO de resposta com os dados atualizados da chave inativada.
@@ -165,11 +164,10 @@ public class ChavePixService {
         ChavePix chave = repository.findById(id)
                 .orElseThrow(() -> new ChavePixException("Chave Pix não encontrada."));
 
-        if (chave.getDataHoraInativacao() != null) { // Verifica se já está inativa.
+        if (chave.getDataHoraInativacao() != null) {
             throw new ChavePixException("A chave já está inativa.");
         }
 
-        // Define a data/hora de inativação
         chave.setDataHoraInativacao(LocalDateTime.now());
         ChavePix inactivatedChavePix = repository.save(chave);
 
@@ -189,8 +187,7 @@ public class ChavePixService {
     }
 
     /**
-     * Valida que uma conta não excedeu o limite permitido de chaves Pix, baseado no número da conta e na
-     * De chaves ativas que a conta possui.
+     * Valida que uma conta não excedeu o limite permitido de chaves Pix.
      *
      * @param dto o DTO contendo os dados da conta para validação.
      */
@@ -200,7 +197,6 @@ public class ChavePixService {
                 dto.getNumeroConta()
         );
 
-        // Considera o limite de 5 chaves para qualquer cliente
         if (quantidadeDeChavesAtivas >= 5) {
             throw new ChavePixException("Limite de chaves atingido para esta conta.");
         }
@@ -217,10 +213,7 @@ public class ChavePixService {
 
         switch (tipoChave) {
             case "cpf":
-                if (!valorChave.matches("\\d{11}")) {
-                    throw new ChavePixException("CPF inválido.");
-                }
-                if (!validarCPF(valorChave)) {
+                if (!valorChave.matches("\\d{11}") || !validarCPF(valorChave)) {
                     throw new ChavePixException("CPF inválido.");
                 }
                 break;
@@ -241,19 +234,19 @@ public class ChavePixService {
 
     /**
      * Validação simplificada de CPF.
+     *
      * @param cpf o número do CPF a ser validado.
      * @return true se o CPF for válido, false caso contrário.
      */
     private boolean validarCPF(String cpf) {
-        // Implementação simplificada para fins de teste.
-        return !cpf.chars().allMatch(ch -> ch == cpf.charAt(0)); // Evita CPFs com todos os dígitos iguais.
+        return !cpf.chars().allMatch(ch -> ch == cpf.charAt(0));
     }
 
     /**
-     * Converte uma entidade Chave Pix em um objeto DTO para uso externo.
+     * Converte uma entidade Chave Pix em um objeto DTO.
      *
      * @param chave a entidade a ser convertida.
-     * @return um DTO contendo os detalhes correspondentes à entidade fornecida.
+     * @return um DTO contendo os detalhes da entidade fornecida.
      */
     private ChavePixResponseDTO toResponseDTO(ChavePix chave) {
         ChavePixResponseDTO dto = new ChavePixResponseDTO();
