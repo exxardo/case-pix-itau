@@ -1,5 +1,6 @@
 package com.desafio.casepixitau.service;
 
+import com.desafio.casepixitau.dto.ChavePixAlteracaoDTO;
 import com.desafio.casepixitau.dto.ChavePixRequestDTO;
 import com.desafio.casepixitau.dto.ChavePixResponseDTO;
 import com.desafio.casepixitau.exception.ChavePixException;
@@ -135,24 +136,68 @@ public class ChavePixService {
      * @param dto o DTO contendo os novos dados da chave Pix.
      * @return um DTO de resposta com os dados atualizados da chave Pix.
      */
-    public ChavePixResponseDTO alterar(UUID id, ChavePixRequestDTO dto) {
+    public ChavePixResponseDTO alterar(UUID id, ChavePixAlteracaoDTO dto) {
+        // Lógica para alterar os dados da chave PIX
         ChavePix chaveExistente = repository.findById(id)
-                .orElseThrow(() -> new ChavePixException("Chave Pix não encontrada."));
+                .orElseThrow(() -> new ChavePixException("Chave Pix não encontrada com o ID: " + id));
 
+        // Verifique se a chave está ativa antes de permitir alteração
         if (chaveExistente.getDataHoraInativacao() != null) {
-            throw new ChavePixException("Não é possível alterar uma chave inativa.");
+            throw new ChavePixException("Chave Pix com ID " + id + " está inativa e não pode ser alterada.");
         }
 
+        // Atualiza os campos que podem ser alterados
         chaveExistente.setTipoConta(dto.getTipoConta());
         chaveExistente.setNumeroAgencia(dto.getNumeroAgencia());
         chaveExistente.setNumeroConta(dto.getNumeroConta());
         chaveExistente.setNomeCorrentista(dto.getNomeCorrentista());
         chaveExistente.setSobrenomeCorrentista(dto.getSobrenomeCorrentista());
 
-        ChavePix updatedChavePix = repository.save(chaveExistente);
-
-        return toResponseDTO(updatedChavePix);
+        // Salva a chave atualizada
+        ChavePix chaveAtualizada = repository.save(chaveExistente);
+        return toResponseDTO(chaveAtualizada);
     }
+
+
+    private void validarTipoConta(String tipoConta) {
+        if (tipoConta == null || tipoConta.isEmpty()) {
+            throw new ChavePixException("Tipo da conta é obrigatório.");
+        }
+        if (!(tipoConta.equals("corrente") || tipoConta.equals("poupanca"))) {
+            throw new ChavePixException("Tipo da conta deve ser 'corrente' ou 'poupanca'.");
+        }
+        if (tipoConta.length() > 10) {
+            throw new ChavePixException("Tipo da conta não pode ter mais de 10 caracteres.");
+        }
+    }
+
+    private void validarNumeroAgencia(int numeroAgencia) {
+        if (numeroAgencia <= 0 || numeroAgencia > 9999) {
+            throw new ChavePixException("Número da agência deve ser um valor numérico positivo e no máximo 4 dígitos.");
+        }
+    }
+
+    private void validarNumeroConta(int numeroConta) {
+        if (numeroConta <= 0 || numeroConta > 99999999) {
+            throw new ChavePixException("Número da conta deve ser um valor numérico positivo e no máximo 8 dígitos.");
+        }
+    }
+
+    private void validarNomeCorrentista(String nomeCorrentista) {
+        if (nomeCorrentista == null || nomeCorrentista.isEmpty()) {
+            throw new ChavePixException("Nome do correntista é obrigatório.");
+        }
+        if (nomeCorrentista.length() > 30) {
+            throw new ChavePixException("Nome do correntista não pode ter mais de 30 caracteres.");
+        }
+    }
+
+    private void validarSobrenomeCorrentista(String sobrenomeCorrentista) {
+        if (sobrenomeCorrentista != null && sobrenomeCorrentista.length() > 45) {
+            throw new ChavePixException("Sobrenome do correntista não pode ter mais de 45 caracteres.");
+        }
+    }
+
 
     /**
      * Inativa uma chave Pix ativa existente.
@@ -161,18 +206,25 @@ public class ChavePixService {
      * @return um DTO de resposta com os dados atualizados da chave inativada.
      */
     public ChavePixResponseDTO inativar(UUID id) {
+        // Buscar a chave no repositório
         ChavePix chave = repository.findById(id)
                 .orElseThrow(() -> new ChavePixException("Chave Pix não encontrada."));
 
+        // Verificar se a chave já está inativada
         if (chave.getDataHoraInativacao() != null) {
-            throw new ChavePixException("A chave já está inativa.");
+            throw new ChavePixException("A chave já foi desativada.");
         }
 
+        // Registrar a data e hora da solicitação de desativação
         chave.setDataHoraInativacao(LocalDateTime.now());
-        ChavePix inactivatedChavePix = repository.save(chave);
 
-        return toResponseDTO(inactivatedChavePix);
+        // Salvar a chave inativada
+        ChavePix chaveInativada = repository.save(chave);
+
+        // Retornar resposta com a data de inativação também no payload
+        return toResponseDTO(chaveInativada);
     }
+
 
     /**
      * Valida que o valor informado para a chave Pix é único no sistema.
@@ -259,7 +311,16 @@ public class ChavePixService {
         dto.setNomeCorrentista(chave.getNomeCorrentista());
         dto.setSobrenomeCorrentista(chave.getSobrenomeCorrentista());
         dto.setDataHoraInclusao(chave.getDataHoraInclusao());
+        dto.setDataHoraInativacao(chave.getDataHoraInativacao());
 
         return dto;
+    }
+
+    public List<ChavePixResponseDTO> consultarPorNomeCorrentista(String nomeCorrentista) {
+        List<ChavePix> chaves = repository.findByNomeCorrentistaContainingIgnoreCase(nomeCorrentista);
+
+        return chaves.stream()
+                .map(this::toResponseDTO) // Convertendo as chaves para o formato de resposta
+                .collect(Collectors.toList());
     }
 }
