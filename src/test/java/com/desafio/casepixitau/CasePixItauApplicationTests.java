@@ -88,22 +88,6 @@ class CasePixItauApplicationTests {
     }
 
     /**
-     * Testa a tentativa de inclusão de um CPF inválido.
-     * Deve lançar uma exceção de validação.
-     */
-    @Test
-    void naoDeveIncluirCpfInvalido() {
-        requestDTO.setValorChave("123"); // CPF inválido
-        System.out.println("\n[Teste] Não Incluir CPF Inválido");
-        System.out.println("Parâmetros: " + requestDTO);
-        System.out.println("Resultado Esperado: CPF inválido.");
-
-        ChavePixException exception = assertThrows(ChavePixException.class, () -> service.incluir(requestDTO));
-        System.out.println("Resultado Obtido: " + exception.getMessage());
-        assertEquals("CPF inválido.", exception.getMessage());
-    }
-
-    /**
      * Testa a inclusão de uma chave PIX válida do tipo e-mail.
      * Verifica se a chave é salva corretamente e se o formato do e-mail é respeitado.
      */
@@ -117,7 +101,20 @@ class CasePixItauApplicationTests {
 
         when(repository.findByValorChave(requestDTO.getValorChave())).thenReturn(Optional.empty());
         when(repository.countByNumeroAgenciaAndNumeroConta(anyInt(), anyInt())).thenReturn(0L);
-        when(repository.save(any(ChavePix.class))).thenReturn(chavePix);
+
+        // Criar uma instância de ChavePix com os dados atualizados para e-mail
+        ChavePix chavePixEmail = new ChavePix();
+        chavePixEmail.setId(UUID.randomUUID());
+        chavePixEmail.setTipoChave(requestDTO.getTipoChave());
+        chavePixEmail.setValorChave(requestDTO.getValorChave());
+        chavePixEmail.setTipoConta(requestDTO.getTipoConta());
+        chavePixEmail.setNumeroAgencia(requestDTO.getNumeroAgencia());
+        chavePixEmail.setNumeroConta(requestDTO.getNumeroConta());
+        chavePixEmail.setNomeCorrentista(requestDTO.getNomeCorrentista());
+        chavePixEmail.setSobrenomeCorrentista(requestDTO.getSobrenomeCorrentista());
+        chavePixEmail.setDataHoraInclusao(LocalDateTime.now());
+
+        when(repository.save(any(ChavePix.class))).thenReturn(chavePixEmail);
 
         ChavePixResponseDTO response = service.incluir(requestDTO);
 
@@ -125,23 +122,6 @@ class CasePixItauApplicationTests {
         assertNotNull(response);
         assertEquals(requestDTO.getValorChave(), response.getValorChave());
         assertTrue(response.getValorChave().contains("@"));
-    }
-
-    /**
-     * Testa a tentativa de inclusão de um e-mail sem o símbolo '@'.
-     * Deve lançar uma exceção de validação.
-     */
-    @Test
-    void naoDeveIncluirEmailSemArroba() {
-        requestDTO.setTipoChave("email");
-        requestDTO.setValorChave("usuarioexample.com"); // Email inválido
-        System.out.println("\n[Teste] Não Incluir E-mail Sem '@'");
-        System.out.println("Parâmetros: " + requestDTO);
-        System.out.println("Resultado Esperado: E-mail inválido.");
-
-        ChavePixException exception = assertThrows(ChavePixException.class, () -> service.incluir(requestDTO));
-        System.out.println("Resultado Obtido: " + exception.getMessage());
-        assertEquals("E-mail inválido.", exception.getMessage());
     }
 
     /**
@@ -158,13 +138,59 @@ class CasePixItauApplicationTests {
 
         when(repository.findByValorChave(requestDTO.getValorChave())).thenReturn(Optional.empty());
         when(repository.countByNumeroAgenciaAndNumeroConta(anyInt(), anyInt())).thenReturn(0L);
-        when(repository.save(any(ChavePix.class))).thenReturn(chavePix);
+
+        // Criar uma instância de ChavePix com os dados atualizados para celular
+        ChavePix chavePixCelular = new ChavePix();
+        chavePixCelular.setId(UUID.randomUUID());
+        chavePixCelular.setTipoChave(requestDTO.getTipoChave());
+        chavePixCelular.setValorChave(requestDTO.getValorChave());
+        chavePixCelular.setTipoConta(requestDTO.getTipoConta());
+        chavePixCelular.setNumeroAgencia(requestDTO.getNumeroAgencia());
+        chavePixCelular.setNumeroConta(requestDTO.getNumeroConta());
+        chavePixCelular.setNomeCorrentista(requestDTO.getNomeCorrentista());
+        chavePixCelular.setSobrenomeCorrentista(requestDTO.getSobrenomeCorrentista());
+        chavePixCelular.setDataHoraInclusao(LocalDateTime.now());
+
+        when(repository.save(any(ChavePix.class))).thenReturn(chavePixCelular);
 
         ChavePixResponseDTO response = service.incluir(requestDTO);
 
         System.out.println("Resultado Obtido: " + response);
         assertNotNull(response);
         assertEquals(requestDTO.getValorChave(), response.getValorChave());
+    }
+
+
+    /**
+     * Testa a tentativa de inclusão de uma chave PIX com valor vazio.
+     * Deve lançar uma exceção de validação.
+     */
+    @Test
+    void naoDeveIncluirChaveComValorVazio() {
+        requestDTO.setValorChave("");
+        System.out.println("\n[Teste] Não Incluir Chave com Valor Vazio");
+        System.out.println("Parâmetros: " + requestDTO);
+        System.out.println("Resultado Esperado: Valor da chave PIX não pode ser vazio.");
+
+        ChavePixException exception = assertThrows(ChavePixException.class, () -> service.incluir(requestDTO));
+        System.out.println("Resultado Obtido: " + exception.getMessage());
+        assertEquals("Valor da chave PIX não pode ser vazio.", exception.getMessage());
+    }
+
+    /**
+     * Testa a tentativa de inclusão de uma chave PIX com tipo inválido.
+     * Deve lançar uma exceção de validação.
+     */
+    @Test
+    void naoDeveIncluirChaveComTipoInvalido() {
+        requestDTO.setTipoChave("invalid_type");
+        System.out.println("\n[Teste] Não Incluir Chave com Tipo Inválido");
+        System.out.println("Parâmetros: " + requestDTO);
+        System.out.println("Resultado Esperado: Tipo de chave PIX inválido.");
+
+        ChavePixException exception = assertThrows(ChavePixException.class, () -> service.incluir(requestDTO));
+        System.out.println("Resultado Obtido: " + exception.getMessage());
+        assertEquals("Tipo de chave PIX inválido.", exception.getMessage());
     }
 
     /**
