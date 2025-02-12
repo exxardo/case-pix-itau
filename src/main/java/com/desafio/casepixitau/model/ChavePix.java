@@ -131,5 +131,23 @@ public class ChavePix {
     public void setVersion(Long version) {
         this.version = version;
     }
+
+    @Override
+    public String toString() {
+        return "ChavePix{" +
+                "id=" + id +
+                ", tipoChave='" + tipoChave + '\'' +
+                ", valorChave='" + valorChave + '\'' +
+                ", tipoConta='" + tipoConta + '\'' +
+                ", numeroAgencia=" + numeroAgencia +
+                ", numeroConta=" + numeroConta +
+                ", nomeCorrentista='" + nomeCorrentista + '\'' +
+                ", sobrenomeCorrentista='" + sobrenomeCorrentista + '\'' +
+                ", dataHoraInclusao=" + dataHoraInclusao +
+                ", dataHoraInativacao=" + dataHoraInativacao +
+                ", version=" + version +
+                '}';
+    }
+
 }
 

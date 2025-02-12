@@ -67,7 +67,7 @@ public class ChavePixService {
      */
     public ChavePixResponseDTO consultarPorId(UUID id) {
         ChavePix chave = repository.findById(id)
-                .orElseThrow(() -> new ChavePixException("Chave Pix não encontrada."));
+                .orElseThrow(() -> new ChavePixException("Chave PIX não encontrada para o ID informado."));
         return toResponseDTO(chave);
     }
 

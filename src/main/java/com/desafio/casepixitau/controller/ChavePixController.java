@@ -117,10 +117,10 @@ public class ChavePixController {
             ChavePixResponseDTO response = service.consultarPorId(id);
             return ResponseEntity.status(HttpStatusCodes.SUCCESS).body(response);
         } catch (ChavePixException e) {
-            return ResponseEntity.status(HttpStatusCodes.NOT_FOUND).body(null);
+            return ResponseEntity.status(HttpStatusCodes.NOT_FOUND)
+                    .body(new ErrorResponseDTO("Chave PIX não encontrada para o ID informado."));
         }
     }
-
 
     /**
      * Consulta chaves PIX pelo tipo de chave (celular, email ou CPF).

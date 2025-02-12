@@ -1,5 +1,7 @@
 package com.desafio.casepixitau.dto;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Data;
 import java.time.LocalDateTime;
 import java.util.UUID;
@@ -19,8 +21,16 @@ public class ChavePixResponseDTO {
     private int numeroConta;
     private String nomeCorrentista;
     private String sobrenomeCorrentista;
+
+    @JsonInclude(JsonInclude.Include.NON_NULL)
     private LocalDateTime dataHoraInclusao;
-    private LocalDateTime dataHoraInativacao;  // Verifique se este campo está aqui
+
+    private LocalDateTime dataHoraInativacao;
+
+    @JsonProperty("dataHoraInativacao")
+    public String getDataHoraInativacao() {
+        return dataHoraInativacao == null ? "" : dataHoraInativacao.toString();
+    }
 
     public UUID getId() {
         return id;
@@ -31,7 +41,7 @@ public class ChavePixResponseDTO {
     }
 
     public String getTipoChave() {
-        return tipoChave;
+        return tipoChave == null ? "" : tipoChave;
     }
 
     public void setTipoChave(String tipoChave) {
@@ -39,7 +49,7 @@ public class ChavePixResponseDTO {
     }
 
     public String getValorChave() {
-        return valorChave;
+        return valorChave == null ? "" : valorChave;
     }
 
     public void setValorChave(String valorChave) {
@@ -47,7 +57,7 @@ public class ChavePixResponseDTO {
     }
 
     public String getTipoConta() {
-        return tipoConta;
+        return tipoConta == null ? "" : tipoConta;
     }
 
     public void setTipoConta(String tipoConta) {
@@ -71,7 +81,7 @@ public class ChavePixResponseDTO {
     }
 
     public String getNomeCorrentista() {
-        return nomeCorrentista;
+        return nomeCorrentista == null ? "" : nomeCorrentista;
     }
 
     public void setNomeCorrentista(String nomeCorrentista) {
@@ -79,26 +89,10 @@ public class ChavePixResponseDTO {
     }
 
     public String getSobrenomeCorrentista() {
-        return sobrenomeCorrentista;
+        return sobrenomeCorrentista == null ? "" : sobrenomeCorrentista;
     }
 
     public void setSobrenomeCorrentista(String sobrenomeCorrentista) {
         this.sobrenomeCorrentista = sobrenomeCorrentista;
-    }
-
-    public LocalDateTime getDataHoraInclusao() {
-        return dataHoraInclusao;
-    }
-
-    public void setDataHoraInclusao(LocalDateTime dataHoraInclusao) {
-        this.dataHoraInclusao = dataHoraInclusao;
-    }
-
-    public LocalDateTime getDataHoraInativacao() {
-        return dataHoraInativacao;
-    }
-
-    public void setDataHoraInativacao(LocalDateTime dataHoraInativacao) {
-        this.dataHoraInativacao = dataHoraInativacao;
     }
 }
