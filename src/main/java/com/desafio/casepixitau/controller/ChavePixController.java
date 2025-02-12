@@ -72,10 +72,9 @@ public class ChavePixController {
     public ResponseEntity<ChavePixResponseDTO> inativar(@PathVariable UUID id) {
         try {
             ChavePixResponseDTO response = service.inativar(id);
-            return ResponseEntity.status(HttpStatusCodes.SUCCESS).body(response);
+            return ResponseEntity.status(HttpStatusCodes.SUCCESS).body(response);  // Retorna com data de inativação
         } catch (ChavePixException e) {
-            return ResponseEntity.status(HttpStatusCodes.UNPROCESSABLE_ENTITY)
-                    .body(null);
+            return ResponseEntity.status(HttpStatusCodes.UNPROCESSABLE_ENTITY).body(null);
         }
     }
 
@@ -141,4 +140,22 @@ public class ChavePixController {
         List<ChavePixResponseDTO> response = service.consultarPorData(dataInclusao, dataInativacao);
         return ResponseEntity.status(HttpStatusCodes.SUCCESS).body(response);
     }
+
+    /**
+     * Consulta chaves PIX pelo nome do correntista.
+     *
+     * @param nomeCorrentista Nome do correntista.
+     * @return Lista de chaves PIX que correspondem ao nome informado.
+     */
+    @GetMapping("/nome")
+    public ResponseEntity<List<ChavePixResponseDTO>> consultarPorNomeCorrentista(
+            @RequestParam("nome") String nomeCorrentista) {
+        try {
+            List<ChavePixResponseDTO> response = service.consultarPorNomeCorrentista(nomeCorrentista);
+            return ResponseEntity.status(HttpStatusCodes.SUCCESS).body(response);
+        } catch (ChavePixException e) {
+            return ResponseEntity.status(HttpStatusCodes.NOT_FOUND).body(null);
+        }
+    }
+
 }
