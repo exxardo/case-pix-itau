@@ -1,142 +1,261 @@
-# CASE - Desenvolvimento módulo de cadastro de chaves PIX
+Descrição:
+Esta MR entrega a implementação completa da API de Cadastro de Chaves PIX, atendendo a todos os requisitos mínimos do desafio proposto pelo Itaú. A solução foi desenvolvida utilizando Java 17, Spring Boot 3.4.2 e banco de dados H2 para persistência.
 
-## Introdução
+Principais Implementações:
 
-O Pix é o arranjo de pagamentos e recebimentos instantâneos, disponível todos os dias do ano, com liquidação em tempo real de suas transações. Ou seja, permite a transferência imediata de valores entre diferentes instituições, em todos os horários e dias, entre pessoas físicas, empresas ou entes governamentais.
+Inclusão de Chaves PIX:
 
-O Pix é uma forma de pagar e receber valores.  
-**Chave Pix**: um apelido para a conta transacional que deve ser atribuído pelo titular da conta ou representante legal/operador permissionado, usado para identificar a conta corrente do cliente recebedor por meio de uma única informação. Essa chave retornará a informação que identificará o recebedor da cobrança.
+Suporte para CPF, e-mail e celular.
+Validações rigorosas para cada tipo de chave conforme especificações do desafio.
+Limitação de 5 chaves para pessoa física e 20 chaves para pessoa jurídica.
+Prevenção de duplicidade de chaves para diferentes correntistas.
+Geração automática de UUID como identificador único da chave.
+Registro de data e hora no momento da criação.
+Alteração de Chaves PIX:
 
-### Formatos das chaves Pix:
-- **Número de celular**: Inicia-se com "+", seguido do código do país, DDD e número com nove dígitos.
-- **E-mail**: Contém "@", tamanho máximo de 77 caracteres.
-- **CPF**: Utilizado com 11 dígitos (sem pontos ou traços).
-- **CNPJ**: Utilizado com 14 dígitos (sem pontos ou traços).
-- **Chave Aleatória**: Informação alfanumérica com 36 posições (sem pontuação).
+Permite atualização de informações da conta vinculada.
+Restrições para impedir alteração de chaves inativas, tipo ou valor da chave.
+Validações específicas para tipo de conta, número da agência e conta, nome e sobrenome do correntista.
+Inativação de Chaves PIX:
 
-### Regras gerais:
-- Cadastro limitado a até 5 chaves por conta para Pessoa Física e até 20 chaves por conta para Pessoa Jurídica.
-- As chaves cadastradas devem ser armazenadas e disponibilizadas aos correntistas para consulta.
+Chave inativada não pode ser alterada ou reutilizada.
+Registro de data e hora da inativação.
+Impede inativação de chaves já inativas com retorno de erro apropriado.
+Consultas de Chaves PIX:
 
----
+Consulta por ID (obrigatória).
+Consulta por tipo de chave e por agência e conta.
+Regras para impedir combinações inválidas de filtros e retorno adequado em caso de não encontrar registros.
 
 ## Inclusão
 
 ### Objetivo
-Viabilizar a inclusão de chaves PIX, vinculando a chave à agência e conta do correntista Itaú.  
-A implementação deve contemplar no mínimo três dos cinco tipos de chaves (ex.: celular, e-mail e CPF).
 
-### Dados de entrada (Tabela 1)
+Viabilizar a inclusão de chaves PIX, vinculando a chave à agência e conta do correntista Itaú.
 
-| Nome                  | Tipo Dado       | Obrigatório |
-|-----------------------|-----------------|-------------|
-| TIPO CHAVE            | Texto (9)      | SIM         |
-| VALOR CHAVE           | Texto (77)     | SIM         |
-| TIPO CONTA            | Texto (10)     | SIM         |
-| NUMERO AGENCIA        | Numérico (4)   | SIM         |
-| NUMERO CONTA          | Numérico (8)   | SIM         |
-| NOME CORRENTISTA      | Texto (30)     | SIM         |
-| SOBRENOME CORRENTISTA | Texto (45)     | NÃO         |
+Para a implementação dessa funcionalidade, minimamente deve estar contemplado o desenvolvimento de três dos cinco tipos de chaves. Fique livre a escolha por parte do candidato. Exemplo: Inclusão pode contemplar somente para os tipos de chaves celular, e-mail e CPF.
+
+### Dados de entrada da inclusão (Tabela 1)
+
+| Nome                  | Tipo Dado                                         | Obrigatório |
+|-----------------------|---------------------------------------------------|-------------|
+| TIPO CHAVE            | (celular \| email \| cpf \| cnpj \| aleatorio)    | SIM         |
+| VALOR CHAVE           | Texto (77)                                        | SIM         |
+| TIPO CONTA            | (corrente \| poupança) Texto (10)                 | SIM         |
+| NUMERO AGENCIA        | Numérico (4)                                      | SIM         |
+| NUMERO CONTA          | Numérico (8)                                      | SIM         |
+| NOME CORRENTISTA      | Texto (30)                                        | SIM         |
+| SOBRENOME CORRENTISTA | Texto (45)                                        | NÃO         |
 
 ### Critérios de aceite
-1. Registrar as informações no banco de dados.
-2. Gerar um código único de registro no formato UUID.
-3. Limitar o número máximo de chaves por conta:
-    - 5 para Pessoa Física.
-    - 20 para Pessoa Jurídica.
-4. Não permitir duplicidade no campo "VALOR CHAVE".
-5. Registrar data e hora da inclusão da chave.
-6. Validar as regras específicas para cada tipo de chave:
-    - **Celular**: Validar código do país (+), DDD e número com nove dígitos.
-    - **E-mail**: Deve conter "@", ser alfanumérico e ter no máximo 77 caracteres.
-    - **CPF/CNPJ**: Validar formato, número máximo de dígitos e validade.
-    - **Chave Aleatória**: Aceitar até 36 caracteres alfanuméricos.
-7. Respeitar obrigatoriedade dos campos conforme Tabela 1.
-8. Retornar HTTP code:
-    - `200` em caso de sucesso (retorna ID gerado).
-    - `422` se houver erro nas validações.
 
----
+1. Deve registrar em banco de dados as informações imputadas.
+2. Deve gerar um código de registro único (id), independentemente do tipo de chave registrado (celular, e-mail, CPF, CNPJ etc...).
+   - A chave (ID) deve ser no formato UUID.
+3. Limitar em até 5 chaves por conta para pessoa física e 20 chaves para pessoa jurídica.
+4. Não deve permitir o registro de chaves duplicadas. O valor informado no campo VALOR CHAVE, não deve existir para outro correntista do banco.
+5. Deve ser registrado a data e hora em que a chave foi registrada.
+6. Deve validar as regras de cadastro seguindo os tipos e regras abaixo:
+   - **Celular**:
+      - Deve validar se valor já existe cadastrado.
+      - Deve possuir o código país:
+         - Deve ser numérico (não aceitar letras).
+         - Deve ser de até dois dígitos.
+         - Deve iniciar com o símbolo “+”.
+      - Deve possuir DDD:
+         - Deve ser numérico (não aceitar letras).
+         - Deve ser de até três dígitos.
+      - Número com nove dígitos:
+         - Deve ser numérico (não aceitar letras).
+   - **E-mail**:
+      - Deve validar se valor já existe cadastrado.
+      - Deve conter o símbolo “@”.
+      - Pode conter valores alfanuméricos.
+      - Máximo de 77 caracteres.
+   - **CPF**:
+      - Deve validar se valor já existe cadastrado.
+      - Deve conter no máximo 11 dígitos.
+      - Deve fazer validação de CPF válido.
+      - Deve aceitar somente números.
+   - **CNPJ**:
+      - Deve validar se valor já existe cadastrado.
+      - Deve conter no máximo 14 dígitos.
+      - Deve fazer validação de CNPJ válido.
+      - Deve aceitar somente números.
+   - **Chave Aleatória**:
+      - Deve validar se valor já existe cadastrado.
+      - Deve aceitar no máximo 36 caracteres alfanuméricos.
+   - **TIPO CONTA**:
+      - Somente permite os valores (corrente ou poupança).
+      - Deve ser informado obrigatoriamente.
+      - Não deve permitir estourar 10 caracteres.
+   - **NÚMERO AGÊNCIA**:
+      - Deve permitir somente valores numéricos.
+      - Deve ser informado obrigatoriamente.
+      - Não deve permitir estourar 4 dígitos.
+   - **NÚMERO CONTA**:
+      - Deve permitir somente valores numéricos.
+      - Deve ser informado obrigatoriamente.
+      - Não deve permitir estourar 8 dígitos.
+
+7. Deve respeitar a obrigatoriedade dos campos (Tabela 1).
+8. Deve exibir mensagem de erro (texto livre), caso regra não seja respeitada.
+9. Retornar http code 200 caso inclusão seja realizada com sucesso. Retornar no corpo da resposta o id gerado.
+10. Retornar http code 422 caso inclusão não respeite as regras de validação.
 
 ## Alteração
 
 ### Objetivo
-Permitir alteração dos dados associados a uma chave registrada (exceto ID, tipo ou valor da chave).
 
-### Dados de entrada (Tabela 2)
+Permitir alteração do valor de uma chave registrada. Deve-se permitir alterar um e-mail, telefone, CNPJ / CPF já cadastrado.
 
-| Nome                  | Tipo Dado       | Obrigatório |
-|-----------------------|-----------------|-------------|
-| ID                    | UUID           | SIM         |
-| TIPO CONTA            | Texto (10)     | SIM         |
-| NUMERO AGENCIA        | Numérico (4)   | SIM         |
-| NUMERO CONTA          | Numérico (8)   | SIM         |
-| NOME CORRENTISTA      | Texto (30)     | SIM         |
-| SOBRENOME CORRENTISTA | Texto (45)     | NÃO         |
+### Dados de entrada alteração (Tabela 2)
+
+| Nome                  | Tipo Dado              | Obrigatório |
+|-----------------------|------------------------|-------------|
+| ID                    | UUID                   | SIM         |
+| TIPO CONTA            | (corrente \| poupança) | SIM         |
+| NUMERO AGENCIA        | Texto (10)             | SIM         |
+| NUMERO CONTA          | Numérico (4)           | SIM         |
+| NOME CORRENTISTA      | Texto (30)             | SIM         |
+| SOBRENOME CORRENTISTA | Texto (45)             | NÃO         |
 
 ### Dados de saída (Tabela 3)
 
-| Nome                  | Tipo Dado       |
-|-----------------------|-----------------|
-| ID                    | UUID           |
-| TIPO CHAVE            | Texto (9)      |
-| VALOR CHAVE           | Texto (77)     |
-| TIPO CONTA            | Texto (10)     |
-| NUMERO AGENCIA        | Numérico (4)   |
-| NUMERO CONTA          | Numérico (8)   |
-| NOME CORRENTISTA      | Texto (30)     |
-| SOBRENOME CORRENTISTA | Texto (45)     |
-| DATA HORA INCLUSAO    | DATETIME       |
+| Nome                  | Tipo Dado              |
+|-----------------------|------------------------|
+| ID                    | UUID                   |
+| TIPO CHAVE            | (celular \| email \| cpf \| cnpj \| aleatorio) |
+| VALOR CHAVE           | Texto (77)             |
+| TIPO CONTA            | (corrente \| poupança) |
+| NUMERO AGENCIA        | Texto (10)             |
+| NUMERO CONTA          | Numérico (4)           |
+| NOME CORRENTISTA      | Texto (30)             |
+| SOBRENOME CORRENTISTA | Texto (45)             |
+| DATA HORA INCLUSAO DA CHAVE | DATETIME        |
 
 ### Critérios de aceite
-1. Validar as alterações conforme regras específicas do tipo de dado.
-2. Não permitir alterações nos campos ID, tipo ou valor da chave.
-3. Não permitir alterações em chaves inativadas.
-4. Retornar HTTP code:
-    - `200` em caso de sucesso.
-    - `422` se houver erro nas validações.
-    - `404` se o ID não for encontrado.
 
----
+1. Deve ser feita a validação do valor alterado, conforme tipo de dado e se a informação é obrigatória ou não.
+2. O ID da chave **NÃO** pode ser alterado.
+3. O tipo da chave **NÃO** pode ser alterado.
+4. O valor da chave **NÃO** pode ser alterado.
+5. **Não** é permitido alterar chaves inativadas.
+6. Deve validar os valores alterados seguindo regras abaixo:
+   - **TIPO CONTA**:
+      - Somente permite os valores (corrente ou poupança).
+      - Deve ser informado obrigatoriamente.
+      - Não deve permitir estourar 10 caracteres.
+   - **NÚMERO AGÊNCIA**:
+      - Deve permitir somente valores numéricos.
+      - Deve ser informado obrigatoriamente.
+      - Não deve permitir estourar 4 dígitos.
+   - **NÚMERO CONTA**:
+      - Deve permitir somente valores numéricos.
+      - Deve ser informado obrigatoriamente.
+      - Não deve permitir estourar 8 dígitos.
+   - **NOME CORRENTISTA**:
+      - Deve ser informado obrigatoriamente.
+      - Não deve permitir estourar 30 caracteres.
+   - **SOBRENOME CORRENTISTA**:
+      - Se informado, não deve permitir estourar 45 caracteres.
+
+7. Deve exibir mensagem de erro (texto livre), caso regra não seja respeitada.
+8. Retornar http code 200 caso a alteração seja realizada com sucesso. Retornar no corpo da resposta o conteúdo da Tabela 3.
+9. Retornar http code 422 caso a alteração não respeite as regras de validação.
+10. Retornar http code 404 caso o ID informado não seja encontrado.
 
 ## Deleção
 
 ### Objetivo
-Inativar uma chave registrada por ID, impedindo alterações ou consultas futuras.
+
+Inativar uma chave registrada por ID, impedindo que a mesma seja alterada ou consultada. Somente o ID da chave deve ser informado para efetivar a desativação.
 
 ### Dados de saída (Tabela 4)
 
-Mesmo formato da Tabela 3, adicionando:
-- DATA HORA INATIVAÇÃO DA CHAVE.
+| Nome                  | Tipo Dado              |
+|-----------------------|------------------------|
+| ID                    | UUID                   |
+| TIPO CHAVE            | (celular \| email \| cpf \| cnpj \| aleatorio) |
+| VALOR CHAVE           | Texto (77)             |
+| TIPO CONTA            | (corrente \| poupança) |
+| NUMERO AGENCIA        | Texto (10)             |
+| NUMERO CONTA          | Numérico (4)           |
+| NOME CORRENTISTA      | Texto (30)             |
+| SOBRENOME CORRENTISTA | Texto (45)             |
+| DATA HORA INCLUSAO DA CHAVE | DATETIME        |
+| DATA HORA INATIVAÇÃO DA CHAVE | DATETIME     |
 
 ### Critérios de aceite
-1. Retornar erro (`422`) se a chave já estiver desativada.
-2. Registrar data/hora da inativação.
-3. Retornar HTTP code:
-    - `200` em caso de sucesso.
 
----
+1. Se o ID da chave informada já estiver desativado, uma mensagem deve ser retornada informando que a mesma já foi desativada (texto da mensagem livre).
+   - Retornar http code 422.
+2. Deve ser registrada a data e a hora da solicitação da desativação da chave.
+3. Retornar em caso de sucesso:
+   - http code 200.
+   - Payload conforme Tabela 4.
 
 ## Consulta
 
 ### Objetivo
-Disponibilizar consultas por:
-- ID (**obrigatório implementar**).
-- Tipo de chave, agência/conta, nome do correntista, data de inclusão ou inativação.
+
+Disponibilizar funcionalidades de consulta de chaves PIX por:
+
+a) Consulta por ID  
+b) Consulta por Tipo de chave  
+c) Agência e Conta  
+d) Nome do correntista  
+e) Data de inclusão da chave  
+f) Data da inativação da chave
+
+Para a implementação dessa funcionalidade, minimamente deve estar contemplado o desenvolvimento de três das seis consultas. **A consulta por ID é obrigatória!** Fique livre a escolha por parte do candidato, quais consultas implementar.
 
 ### Dados de saída (Tabela 5)
 
-Mesmo formato da Tabela 3, adicionando:
-- DATA HORA INATIVAÇÃO DA CHAVE.
+| Nome                      | Tipo Dado              |
+|---------------------------|------------------------|
+| ID                        | UUID                   |
+| TIPO CHAVE                | (celular \| email \| cpf \| cnpj \| aleatorio) |
+| VALOR CHAVE               | Texto (77)             |
+| TIPO CONTA                | (corrente \| poupança) |
+| NUMERO AGENCIA            | Texto (10)             |
+| NUMERO CONTA              | Numérico (4)           |
+| NOME CORRENTISTA          | Texto (30)             |
+| SOBRENOME CORRENTISTA     | Texto (45)             |
+| DATA HORA INCLUSAO DA CHAVE | DATE (dd/mm/aaaa)   |
+| DATA HORA INATIVAÇÃO DA CHAVE | DATE (dd/mm/aaaa)|
 
 ### Critérios de aceite
-1. Permitir combinações entre filtros exceto entre data de inclusão/inativação.
-2. Retornar erro (`422`) se filtros inválidos forem combinados.
-3. Retornar erro (`404`) se nenhuma chave for encontrada.
-4. Campos nulos devem ser apresentados como vazio (`""`).
+
+1. Disponibilizar consultas combinadas entre os filtros **b**, **c**, **d**, **e** ou **f**.
+2. Se informar o **ID** para consulta, nenhum outro filtro pode ser aceito.
+   - Devolver http code 422 com mensagem (texto livre).
+3. Não permitir a combinação de filtros **Data de inclusão da chave** e **Data da inativação da chave**. Somente um ou outro.
+   - Devolver erro 422 com mensagem (texto livre).
+4. Caso a consulta não retorne registros:
+   - Devolver http code 404.
+5. A lista resultado deve conter os parâmetros da Tabela 5, independente do filtro realizado.
+6. Campos nulos devem ser apresentados como branco `""`.
 
 ---
 
-## Considerações finais
+## O seu objetivo é:
 
-O objetivo é desenvolver APIs funcionais para cadastro, alteração, deleção e consulta das chaves PIX utilizando boas práticas como testes unitários (\(90\%\)), banco de dados à escolha e frameworks como Spring Boot ou Quarkus. O código deve seguir princípios da metodologia *12 Factor App* para garantir escalabilidade e manutenibilidade.
+1. Escrever um código funcional de um cadastro de Chaves PIX com APIs que atendam as funcionalidades acima descritas.
+2. Utilizar preferencialmente a linguagem **Java**.
+3. Seu código deve possuir testes unitários (90% de cobertura).
+4. Utilizar banco de dados (livre escolha):
+   - mySQL, SQL SERVER, ORACLE, mongoDB, postgres etc.
+   - banco em memória (H2).
+   - banco em container - mySQL, SQL SERVER, ORACLE, mongoDB, postgres etc.
+5. Pode utilizar qualquer framework que esteja familiarizado:
+   - Spring Boot.
+   - Micronaut.
+   - Quarkus.
+   - Sem framework.
+6. Utilizar o gerenciador de dependências de sua preferência (**Maven/Gradle**).
+7. Utilizar um pattern de desenvolvimento que faça sentido, dado o contexto.
+   - Referência de patterns: [Refactoring Guru](https://refactoring.guru/)
+8. Versionar seu código em algum controlador de versão (**GitHub**, CVS etc).
+9. Descrever/demonstrar quais práticas/fatores da metodologia **12 Factor App** foram utilizados na sua solução.
+   - Referência: [12 Factor App](https://12factor.net/pt_br/)
