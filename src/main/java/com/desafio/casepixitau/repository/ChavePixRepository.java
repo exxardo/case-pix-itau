@@ -76,11 +76,10 @@ public interface ChavePixRepository extends JpaRepository<ChavePix, UUID> {
     long countByNumeroAgenciaAndNumeroConta(int numeroAgencia, int numeroConta);
 
     /**
-     * Busca chaves Pix pelo nome do correntista.
+     * Retorna uma lista de chaves Pix que correspondem ao nome do correntista.
      *
-     * @param nomeCorrentista Nome do correntista (pode ser parcial).
-     * @return Lista de chaves Pix que correspondem ao nome informado.
+     * @param nomeCorrentista Nome do correntista.
+     * @return Lista de chaves Pix associadas ao nome do correntista.
      */
     List<ChavePix> findByNomeCorrentistaContainingIgnoreCase(String nomeCorrentista);
 }
-
