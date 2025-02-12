@@ -20,4 +20,6 @@ public class ChavePixResponseDTO {
     private String nomeCorrentista;
     private String sobrenomeCorrentista;
     private LocalDateTime dataHoraInclusao;
+    private LocalDateTime dataHoraInativacao;
+
 }

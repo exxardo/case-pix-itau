@@ -6,6 +6,7 @@ import com.desafio.casepixitau.exception.ChavePixException;
 import com.desafio.casepixitau.model.ChavePix;
 import com.desafio.casepixitau.repository.ChavePixRepository;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -160,6 +161,7 @@ public class ChavePixService {
      * @param id o identificador único da chave a ser inativada.
      * @return um DTO de resposta com os dados atualizados da chave inativada.
      */
+    @Transactional
     public ChavePixResponseDTO inativar(UUID id) {
         ChavePix chave = repository.findById(id)
                 .orElseThrow(() -> new ChavePixException("Chave Pix não encontrada."));
@@ -169,9 +171,9 @@ public class ChavePixService {
         }
 
         chave.setDataHoraInativacao(LocalDateTime.now());
-        ChavePix inactivatedChavePix = repository.save(chave);
+        ChavePix chaveInativada = repository.saveAndFlush(chave);  // Força a atualização imediata no banco
 
-        return toResponseDTO(inactivatedChavePix);
+        return toResponseDTO(chaveInativada);
     }
 
     /**
@@ -259,7 +261,28 @@ public class ChavePixService {
         dto.setNomeCorrentista(chave.getNomeCorrentista());
         dto.setSobrenomeCorrentista(chave.getSobrenomeCorrentista());
         dto.setDataHoraInclusao(chave.getDataHoraInclusao());
+        dto.setDataHoraInativacao(chave.getDataHoraInativacao());
 
         return dto;
     }
+
+
+    /**
+     * Consulta chaves Pix pelo nome do correntista.
+     *
+     * @param nomeCorrentista Nome do correntista.
+     * @return Lista de chaves Pix que correspondem ao nome informado.
+     */
+    public List<ChavePixResponseDTO> consultarPorNomeCorrentista(String nomeCorrentista) {
+        List<ChavePix> chaves = repository.findByNomeCorrentistaContainingIgnoreCase(nomeCorrentista);
+
+        if (chaves.isEmpty()) {
+            throw new ChavePixException("Nenhuma chave Pix encontrada para o nome informado.");
+        }
+
+        return chaves.stream()
+                .map(this::toResponseDTO)
+                .collect(Collectors.toList());
+    }
+
 }
