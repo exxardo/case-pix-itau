@@ -67,8 +67,14 @@ public class ChavePixService {
     public ChavePixResponseDTO consultarPorId(UUID id) {
         ChavePix chave = repository.findById(id)
                 .orElseThrow(() -> new ChavePixException("Chave Pix não encontrada."));
+
+        if (chave.getDataHoraInativacao() != null) {
+            throw new ChavePixException("Chave Pix está inativa e não pode ser consultada.");
+        }
+
         return toResponseDTO(chave);
     }
+
 
     /**
      * Consulta todas as chaves Pix de um tipo específico.
@@ -259,6 +265,7 @@ public class ChavePixService {
         dto.setNomeCorrentista(chave.getNomeCorrentista());
         dto.setSobrenomeCorrentista(chave.getSobrenomeCorrentista());
         dto.setDataHoraInclusao(chave.getDataHoraInclusao());
+        dto.setDataHoraInativacao(chave.getDataHoraInativacao()); // Incluindo o campo na resposta
 
         return dto;
     }
