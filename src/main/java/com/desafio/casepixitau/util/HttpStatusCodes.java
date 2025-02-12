@@ -11,6 +11,7 @@ public final class HttpStatusCodes {
     public static final HttpStatus SUCCESS = HttpStatus.OK;
     public static final HttpStatus UNPROCESSABLE_ENTITY = HttpStatus.UNPROCESSABLE_ENTITY;
     public static final HttpStatus NOT_FOUND = HttpStatus.NOT_FOUND;
+    public static final HttpStatus BAD_REQUEST = HttpStatus.BAD_REQUEST;
 
     /**
      * Construtor privado para evitar instanciamento da classe.
