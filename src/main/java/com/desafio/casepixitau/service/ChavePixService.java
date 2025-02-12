@@ -189,20 +189,19 @@ public class ChavePixService {
     }
 
     /**
-     * Valida que uma conta não excedeu o limite permitido de chaves Pix, baseado no tipo da conta.
+     * Valida que uma conta não excedeu o limite permitido de chaves Pix, baseado no número da conta e na
+     * De chaves ativas que a conta possui.
      *
      * @param dto o DTO contendo os dados da conta para validação.
      */
     private void validarLimiteDeChaves(ChavePixRequestDTO dto) {
-        long quantidadeDeChaves = repository.countByNumeroAgenciaAndNumeroConta(
+        long quantidadeDeChavesAtivas = repository.countByNumeroAgenciaAndNumeroContaAndDataHoraInativacaoIsNull(
                 dto.getNumeroAgencia(),
                 dto.getNumeroConta()
         );
 
-        boolean isPessoaFisica = dto.getTipoConta().equalsIgnoreCase("corrente") ||
-                dto.getTipoConta().equalsIgnoreCase("poupança");
-
-        if ((isPessoaFisica && quantidadeDeChaves >= 5) || (!isPessoaFisica && quantidadeDeChaves >= 20)) {
+        // Considera o limite de 5 chaves para qualquer cliente
+        if (quantidadeDeChavesAtivas >= 5) {
             throw new ChavePixException("Limite de chaves atingido para esta conta.");
         }
     }

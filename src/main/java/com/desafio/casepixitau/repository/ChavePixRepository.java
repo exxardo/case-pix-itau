@@ -86,4 +86,15 @@ public interface ChavePixRepository {
      * @param id Identificador único da chave Pix a ser removida.
      */
     void deleteById(UUID id);
+
+    /**
+     * Conta o número de chaves Pix ativas associadas a uma agência e conta específicas.
+     * Uma chave é considerada ativa quando o campo {@code dataHoraInativacao} está nulo.
+     *
+     * @param numeroAgencia o número da agência bancária associada às chaves Pix.
+     * @param numeroConta o número da conta bancária associada às chaves Pix.
+     * @return a quantidade de chaves Pix ativas (com {@code dataHoraInativacao} nulo) para a combinação de agência e conta fornecida.
+     */
+    long countByNumeroAgenciaAndNumeroContaAndDataHoraInativacaoIsNull(int numeroAgencia, int numeroConta);
+
 }
