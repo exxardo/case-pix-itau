@@ -228,20 +228,30 @@ class CasePixItauApplicationTests {
 
     /**
      * Testa o limite de inclusão de chaves PIX para uma conta.
-     * Deve lançar uma exceção quando o limite é atingido.
+     * Deve lançar uma exceção quando o limite de 5 chaves ativas é atingido.
      */
     @Test
     void naoDeveIncluirQuandoLimiteDeChavesAtingido() {
+        // Simula que o valor da chave ainda não foi cadastrado
         when(repository.findByValorChave(requestDTO.getValorChave())).thenReturn(Optional.empty());
-        when(repository.countByNumeroAgenciaAndNumeroConta(anyInt(), anyInt())).thenReturn(5L);
+
+        // Simula que já existem 5 chaves ativas (dataHoraInativacao == null)
+        when(repository.countByNumeroAgenciaAndNumeroContaAndDataHoraInativacaoIsNull(anyInt(), anyInt())).thenReturn(5L);
+
         System.out.println("\n[Teste] Não Incluir Quando Limite de Chaves Atingido");
         System.out.println("Parâmetros: " + requestDTO);
         System.out.println("Resultado Esperado: Limite de chaves atingido para esta conta.");
 
+        // Espera que a exceção seja lançada ao tentar incluir a 6ª chave
         ChavePixException exception = assertThrows(ChavePixException.class, () -> service.incluir(requestDTO));
+
         System.out.println("Resultado Obtido: " + exception.getMessage());
         assertEquals("Limite de chaves atingido para esta conta.", exception.getMessage());
+
+        // Verifica que o método de salvar não foi chamado
+        verify(repository, never()).save(any(ChavePix.class));
     }
+
 
     /**
      * Testa o registro correto da data e hora de inclusão da chave PIX.
