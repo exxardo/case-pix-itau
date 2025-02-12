@@ -6,8 +6,8 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 @SpringBootApplication
 public class CasePixItauApplication {
 
-	public static void main(String[] args) {
-		SpringApplication.run(CasePixItauApplication.class, args);
-	}
+    public static void main(String[] args) {
+        SpringApplication.run(CasePixItauApplication.class, args);
+    }
 
 }
