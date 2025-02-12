@@ -1,100 +1,78 @@
 package com.desafio.casepixitau.repository;
 
 import com.desafio.casepixitau.model.ChavePix;
+import org.springframework.data.jpa.repository.JpaRepository;
+
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
 /**
- * Interface que define as operações para manipulação das chaves Pix.
- * Pode ser implementada por diferentes repositórios para fornecer persistência.
+ * Interface que define as operações de acesso a dados para a entidade ChavePix.
+ * Estende JpaRepository para fornecer operações CRUD padrão e permite a definição de consultas personalizadas.
  */
-public interface ChavePixRepository {
+public interface ChavePixRepository extends JpaRepository<ChavePix, UUID> {
 
     /**
-     * Busca uma chave Pix pelo seu ID.
+     * Busca uma chave Pix pelo valor da chave.
      *
-     * @param id Identificador único da chave Pix.
-     * @return Um Optional contendo a chave Pix, se encontrada.
-     */
-    Optional<ChavePix> findById(UUID id);
-
-    /**
-     * Busca uma chave Pix pelo seu valor.
-     *
-     * @param valorChave O valor da chave Pix.
-     * @return Um Optional contendo a chave Pix, se encontrada.
+     * @param valorChave Valor da chave Pix.
+     * @return Um Optional contendo a ChavePix, se encontrada.
      */
     Optional<ChavePix> findByValorChave(String valorChave);
 
     /**
-     * Busca chaves Pix pelo tipo de chave.
+     * Retorna uma lista de chaves Pix pelo tipo de chave.
      *
-     * @param tipoChave Tipo da chave Pix.
+     * @param tipoChave Tipo da chave Pix (e.g., email, telefone, CPF).
      * @return Lista de chaves Pix do tipo especificado.
      */
     List<ChavePix> findByTipoChave(String tipoChave);
 
     /**
-     * Busca chaves Pix pela agência e conta.
+     * Retorna uma lista de chaves Pix associadas a uma agência e conta.
      *
      * @param numeroAgencia Número da agência.
      * @param numeroConta Número da conta.
-     * @return Lista de chaves Pix que correspondem à agência e conta informadas.
+     * @return Lista de chaves Pix associadas à agência e conta especificadas.
      */
     List<ChavePix> findByNumeroAgenciaAndNumeroConta(int numeroAgencia, int numeroConta);
 
     /**
-     * Busca chaves Pix pela data de inclusão.
+     * Busca chaves Pix com data de inclusão entre o intervalo especificado.
      *
-     * @param inicio Data e hora inicial.
-     * @param fim Data e hora final.
+     * @param inicio Data e hora de início.
+     * @param fim Data e hora de fim.
      * @return Lista de chaves Pix incluídas no período especificado.
      */
     List<ChavePix> findByDataHoraInclusaoBetween(LocalDateTime inicio, LocalDateTime fim);
 
     /**
-     * Busca chaves Pix pela data de inativação.
+     * Busca chaves Pix com data de inativação entre o intervalo especificado.
      *
-     * @param inicio Data e hora inicial.
-     * @param fim Data e hora final.
+     * @param inicio Data e hora de início.
+     * @param fim Data e hora de fim.
      * @return Lista de chaves Pix inativadas no período especificado.
      */
     List<ChavePix> findByDataHoraInativacaoBetween(LocalDateTime inicio, LocalDateTime fim);
 
     /**
-     * Conta a quantidade de chaves para uma agência e conta.
+     * Conta o número de chaves Pix ativas para uma agência e conta.
      *
      * @param numeroAgencia Número da agência.
      * @param numeroConta Número da conta.
-     * @return Quantidade de chaves associadas à agência e conta.
-     */
-    long countByNumeroAgenciaAndNumeroConta(int numeroAgencia, int numeroConta);
-
-    /**
-     * Salva uma chave Pix no repositório.
-     *
-     * @param chavePix Objeto ChavePix a ser salvo.
-     * @return A chave Pix persistida.
-     */
-    ChavePix save(ChavePix chavePix);
-
-    /**
-     * Remove uma chave Pix pelo seu ID.
-     *
-     * @param id Identificador único da chave Pix a ser removida.
-     */
-    void deleteById(UUID id);
-
-    /**
-     * Conta o número de chaves Pix ativas associadas a uma agência e conta específicas.
-     * Uma chave é considerada ativa quando o campo {@code dataHoraInativacao} está nulo.
-     *
-     * @param numeroAgencia o número da agência bancária associada às chaves Pix.
-     * @param numeroConta o número da conta bancária associada às chaves Pix.
-     * @return a quantidade de chaves Pix ativas (com {@code dataHoraInativacao} nulo) para a combinação de agência e conta fornecida.
+     * @return Número de chaves Pix ativas.
      */
     long countByNumeroAgenciaAndNumeroContaAndDataHoraInativacaoIsNull(int numeroAgencia, int numeroConta);
 
+    /**
+     * Conta o número total de chaves Pix associadas a uma agência e conta.
+     *
+     * @param numeroAgencia Número da agência.
+     * @param numeroConta Número da conta.
+     * @return Número total de chaves Pix para a agência e conta especificadas.
+     */
+    long countByNumeroAgenciaAndNumeroConta(int numeroAgencia, int numeroConta);
 }
+
