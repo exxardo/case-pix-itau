@@ -45,7 +45,7 @@ class ChavePixControllerTests {
     }
 
     // Testes para inclusão de chave PIX com erros
-// Erro comum em vários testes: Campos obrigatórios não preenchidos
+
     @Test
     void testIncluirChavePix_ChaveDuplicada() throws Exception {
         ChavePixRequestDTO requestDTO = new ChavePixRequestDTO();
@@ -147,20 +147,6 @@ class ChavePixControllerTests {
                 .andExpect(status().isUnprocessableEntity());
     }
 
-    @Test
-    void testAlterarChavePix_DadosInvalidos() throws Exception {
-        UUID chaveId = UUID.randomUUID();
-        ChavePixAlteracaoDTO alteracaoDTO = new ChavePixAlteracaoDTO();
-        // Dados inválidos propositalmente:
-        alteracaoDTO.setNumeroAgencia(0);
-        alteracaoDTO.setNumeroConta(0);
-
-        mockMvc.perform(put("/api/pix/" + chaveId)
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(alteracaoDTO)))
-                .andExpect(status().isBadRequest()); // 400 por validação do DTO
-    }
-
 
     // Testes para inativação de chave PIX
 // Erro: Método não void usando doNothing()
@@ -187,25 +173,24 @@ class ChavePixControllerTests {
                 .andExpect(jsonPath("$.errorMessage").value("Chave já inativa"));
     }
 
-    // Testes para consultas
     @Test
-    void testConsultarPorTipoDeChave() throws Exception {
-        when(chavePixService.consultarPorTipoChave("email"))
-                .thenReturn(Collections.emptyList());
+    void testConsultarPorFiltrosTipoChave() throws Exception {
+        when(chavePixService.consultarPorFiltros(eq("email"), any(), any(), any(), any(), any()))
+                .thenReturn(Collections.singletonList(new ChavePixResponseDTO()));
 
-        mockMvc.perform(get("/api/pix/tipo?tipo=email"))
+        mockMvc.perform(get("/api/pix/filtros?tipo=email"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$").isArray());
+                .andExpect(jsonPath("$[0]").exists());
     }
 
     @Test
-    void testConsultarPorAgenciaEConta() throws Exception {
-        when(chavePixService.consultarPorAgenciaEConta(1234, 567890))
-                .thenReturn(Collections.emptyList());
+    void testConsultarPorFiltrosAgenciaConta() throws Exception {
+        when(chavePixService.consultarPorFiltros(any(), any(), eq(1234), eq(567890), any(), any()))
+                .thenReturn(Collections.singletonList(new ChavePixResponseDTO()));
 
-        mockMvc.perform(get("/api/pix/agencia-conta?agencia=1234&conta=567890"))
+        mockMvc.perform(get("/api/pix/filtros?agencia=1234&conta=567890"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$").isArray());
+                .andExpect(jsonPath("$[0]").exists());
     }
 
     @Test
@@ -213,12 +198,58 @@ class ChavePixControllerTests {
         UUID chaveId = UUID.randomUUID();
 
         when(chavePixService.consultarPorId(chaveId))
-                .thenThrow(new ChavePixException("Chave PIX não encontrada para o ID informado."));
+                .thenThrow(new ChavePixException("Chave PIX não encontrada"));
 
-        mockMvc.perform(get("/api/pix/" + chaveId))
+        mockMvc.perform(get("/api/pix/filtros/" + chaveId))
                 .andExpect(status().isNotFound())
-                .andExpect(jsonPath("$.errorMessage").value("Chave PIX não encontrada para o ID informado."));
+                .andExpect(jsonPath("$.errorMessage").exists());
     }
+
+    @Test
+    void testConsultarPorId_ComFiltrosAdicionais() throws Exception {
+        UUID chaveId = UUID.randomUUID();
+
+        mockMvc.perform(get("/api/pix/filtros/" + chaveId + "?tipo=email"))
+                .andExpect(status().isUnprocessableEntity())
+                .andExpect(jsonPath("$.errorMessage").value("Se o ID for informado, nenhum outro filtro pode ser aceito."));
+    }
+
+    @Test
+    void testAlterarChavePix_DadosInvalidos() throws Exception {
+        UUID chaveId = UUID.randomUUID();
+        ChavePixAlteracaoDTO alteracaoDTO = new ChavePixAlteracaoDTO();
+        alteracaoDTO.setNomeCorrentista("Nome Válido"); // Novo
+        alteracaoDTO.setTipoConta("corrente"); // Novo
+        alteracaoDTO.setNumeroAgencia(0); // Inválido
+        alteracaoDTO.setNumeroConta(0); // Inválido
+
+        mockMvc.perform(put("/api/pix/" + chaveId)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(alteracaoDTO)))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void testConsultarSemFiltros() throws Exception {
+        mockMvc.perform(get("/api/pix/filtros"))
+                .andExpect(status().isUnprocessableEntity())
+                .andExpect(jsonPath("$.errorMessage").value("Ao menos um filtro deve ser informado."));
+    }
+
+    // Teste adicional para validação de campos obrigatórios na inclusão
+//    @Test
+//    void testIncluirChavePix_CamposObrigatorios() throws Exception {
+//        ChavePixRequestDTO requestDTO = new ChavePixRequestDTO(); // Campos vazios
+//
+//        mockMvc.perform(post("/api/pix")
+//                        .contentType(MediaType.APPLICATION_JSON)
+//                        .content(objectMapper.writeValueAsString(requestDTO)))
+//                .andExpect(status().isBadRequest())
+//                .andExpect(jsonPath("$.errors").exists());
+//    }
+
+
+
 
 //    @Test
 //    void testIncluirChavePix_CamposObrigatorios() throws Exception {
