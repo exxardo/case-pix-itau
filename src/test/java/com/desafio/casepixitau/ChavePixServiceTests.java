@@ -1,105 +1,143 @@
 package com.desafio.casepixitau;
 
-import com.desafio.casepixitau.controller.ChavePixController;
-import com.desafio.casepixitau.dto.ChavePixAlteracaoDTO;
-import com.desafio.casepixitau.dto.ChavePixRequestDTO;
-import com.desafio.casepixitau.dto.ChavePixResponseDTO;
+import com.desafio.casepixitau.dto.*;
+import com.desafio.casepixitau.exception.ChavePixException;
 import com.desafio.casepixitau.model.ChavePix;
+import com.desafio.casepixitau.repository.ChavePixRepository;
 import com.desafio.casepixitau.service.ChavePixService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
+import org.mockito.junit.jupiter.MockitoExtension;
 
-import java.util.Collections;
-import java.util.List;
+import java.time.LocalDateTime;
+import java.util.Optional;
 import java.util.UUID;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
-public class ChavePixServiceTests {
+@ExtendWith(MockitoExtension.class)
+class ChavePixServiceTests {
 
     @Mock
-    private ChavePixService service; // Mock do serviço
+    private ChavePixRepository repository;
 
     @InjectMocks
-    private ChavePixController controller; // Controlador que será testado, injetando o serviço
+    private ChavePixService service;
 
-    private ChavePixRequestDTO requestDTO;
-    private ChavePixAlteracaoDTO alteracaoDTO;
-    private ChavePix chavePix;
+    private ChavePixRequestDTO requestValido;
 
     @BeforeEach
-    public void setup() {
-        MockitoAnnotations.openMocks(this);
-
-        // Configuração do DTO para inclusão
-        requestDTO = new ChavePixRequestDTO();
-        requestDTO.setTipoChave("cpf");
-        requestDTO.setValorChave("12345678900");
-        requestDTO.setTipoConta("corrente");
-        requestDTO.setNumeroAgencia(1234);
-        requestDTO.setNumeroConta(567890);
-        requestDTO.setNomeCorrentista("Joao");
-        requestDTO.setSobrenomeCorrentista("Silva");
-
-        // Configuração do DTO para alteração
-        alteracaoDTO = new ChavePixAlteracaoDTO();
-        alteracaoDTO.setTipoChave("email");
-        alteracaoDTO.setValorChave("novovalor@email.com");
-
-        // Configuração da chave Pix
-        chavePix = new ChavePix();
-        chavePix.setId(UUID.randomUUID());
-        chavePix.setTipoChave("cpf");
-        chavePix.setValorChave("12345678900");
-        chavePix.setTipoConta("corrente");
-        chavePix.setNumeroAgencia(1234);
-        chavePix.setNumeroConta(567890);
-        chavePix.setNomeCorrentista("Joao");
-        chavePix.setSobrenomeCorrentista("Silva");
-        chavePix.setDataHoraInativacao(null); // Inicialmente ativa
+    void setUp() {
+        requestValido = new ChavePixRequestDTO();
+        requestValido.setTipoChave("cpf");
+        requestValido.setValorChave("12345678909");
+        requestValido.setTipoConta("corrente");
+        requestValido.setNumeroAgencia(1234);
+        requestValido.setNumeroConta(123456);
+        requestValido.setNomeCorrentista("Fulano");
     }
 
     @Test
-    public void testConsultarPorTipoChaveComSucesso() {
-        // Criando a chave para retornar no mock
-        ChavePix chavePix = new ChavePix();
-        chavePix.setId(UUID.randomUUID());
-        chavePix.setTipoChave("email");
-        chavePix.setValorChave("teste@email.com");
-        chavePix.setTipoConta("corrente");
-        chavePix.setNumeroAgencia(1234);
-        chavePix.setNumeroConta(567890);
-        chavePix.setNomeCorrentista("Joao");
-        chavePix.setSobrenomeCorrentista("Silva");
+    void incluir_DeveRetornarChaveSalva_QuandoDadosValidos() {
+        when(repository.findByValorChave(any())).thenReturn(Optional.empty());
+        when(repository.countByNumeroAgenciaAndNumeroContaAndDataHoraInativacaoIsNull(anyInt(), anyInt())).thenReturn(0L);
+        when(repository.save(any())).thenReturn(new ChavePix());
 
-        // Convertendo ChavePix para ChavePixResponseDTO
-        ChavePixResponseDTO responseDTO = new ChavePixResponseDTO();
-        responseDTO.setId(chavePix.getId());
-        responseDTO.setTipoChave(chavePix.getTipoChave());
-        responseDTO.setValorChave(chavePix.getValorChave());
-        responseDTO.setTipoConta(chavePix.getTipoConta());
-        responseDTO.setNumeroAgencia(chavePix.getNumeroAgencia());
-        responseDTO.setNumeroConta(chavePix.getNumeroConta());
-        responseDTO.setNomeCorrentista(chavePix.getNomeCorrentista());
-        responseDTO.setSobrenomeCorrentista(chavePix.getSobrenomeCorrentista());
+        assertDoesNotThrow(() -> service.incluir(requestValido));
+        verify(repository, times(1)).save(any());
+    }
 
-        // Mocking o comportamento do serviço
-        when(service.consultarPorTipoChave(any(String.class))).thenReturn(Collections.singletonList(responseDTO));
+    @Test
+    void incluir_DeveLancarExcecao_QuandoChaveDuplicada() {
+        when(repository.findByValorChave(any())).thenReturn(Optional.of(new ChavePix()));
 
-        // Chamando o controlador e validando a resposta
-        ResponseEntity<List<ChavePixResponseDTO>> response = controller.consultarPorTipoChave("email");
+        assertThrows(ChavePixException.class, () -> service.incluir(requestValido));
+    }
 
-        assertEquals(HttpStatus.OK, response.getStatusCode());
-        assertNotNull(response.getBody());
-        assertEquals(1, response.getBody().size());
-        assertEquals("teste@email.com", response.getBody().get(0).getValorChave());
+    @Test
+    void incluir_DeveLancarExcecao_QuandoLimiteChavesAtingido() {
+        when(repository.countByNumeroAgenciaAndNumeroContaAndDataHoraInativacaoIsNull(anyInt(), anyInt())).thenReturn(5L);
+
+        assertThrows(ChavePixException.class, () -> service.incluir(requestValido));
+    }
+
+    @Test
+    void consultarPorId_DeveRetornarChave_QuandoExistir() {
+        UUID id = UUID.randomUUID();
+        when(repository.findById(any())).thenReturn(Optional.of(new ChavePix()));
+
+        assertDoesNotThrow(() -> service.consultarPorId(id));
+    }
+
+    @Test
+    void consultarPorId_DeveLancarExcecao_QuandoNaoExistir() {
+        UUID id = UUID.randomUUID();
+        when(repository.findById(any())).thenReturn(Optional.empty());
+
+        assertThrows(ChavePixException.class, () -> service.consultarPorId(id));
+    }
+
+    @Test
+    void alterar_DeveAtualizarChave_QuandoDadosValidos() {
+        UUID id = UUID.randomUUID();
+        ChavePixAlteracaoDTO dto = new ChavePixAlteracaoDTO();
+        dto.setNomeCorrentista("Novo Nome");
+
+        ChavePix chaveExistente = new ChavePix();
+        when(repository.findById(any())).thenReturn(Optional.of(chaveExistente));
+        when(repository.save(any())).thenReturn(chaveExistente);
+
+        assertDoesNotThrow(() -> service.alterar(id, dto));
+    }
+
+    @Test
+    void alterar_DeveLancarExcecao_QuandoChaveInativa() {
+        UUID id = UUID.randomUUID();
+        ChavePix chaveInativa = new ChavePix();
+        chaveInativa.setDataHoraInativacao(LocalDateTime.now());
+        when(repository.findById(any())).thenReturn(Optional.of(chaveInativa));
+
+        assertThrows(ChavePixException.class, () -> service.alterar(id, new ChavePixAlteracaoDTO()));
+    }
+
+//    @Test
+//    void inativar_DeveMarcarDataInativacao_QuandoChaveAtiva() {
+//        UUID id = UUID.randomUUID();
+//        ChavePix chaveAtiva = new ChavePix();
+//        when(repository.findById(any())).thenReturn(Optional.of(chaveAtiva));
+//
+//        assertDoesNotThrow(() -> service.inativar(id));
+//    }
+
+    @Test
+    void inativar_DeveLancarExcecao_QuandoChaveJaInativa() {
+        UUID id = UUID.randomUUID();
+        ChavePix chaveInativa = new ChavePix();
+        chaveInativa.setDataHoraInativacao(LocalDateTime.now());
+        when(repository.findById(any())).thenReturn(Optional.of(chaveInativa));
+
+        assertThrows(ChavePixException.class, () -> service.inativar(id));
+    }
+
+    @Test
+    void validarFormatoChave_DeveLancarExcecao_QuandoCpfInvalido() {
+        requestValido.setValorChave("11111111111");
+        when(repository.findByValorChave(any())).thenReturn(Optional.empty());
+
+        assertThrows(ChavePixException.class, () -> service.incluir(requestValido));
+    }
+
+    @Test
+    void validarFormatoChave_DeveLancarExcecao_QuandoEmailInvalido() {
+        requestValido.setTipoChave("email");
+        requestValido.setValorChave("emailinvalido");
+        when(repository.findByValorChave(any())).thenReturn(Optional.empty());
+
+        assertThrows(ChavePixException.class, () -> service.incluir(requestValido));
     }
 }
