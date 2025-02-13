@@ -1,32 +1,3 @@
-Descrição:
-Esta MR entrega a implementação completa da API de Cadastro de Chaves PIX, atendendo a todos os requisitos mínimos do desafio proposto pelo Itaú. A solução foi desenvolvida utilizando Java 17, Spring Boot 3.4.2 e banco de dados H2 para persistência.
-
-Principais Implementações:
-
-Inclusão de Chaves PIX:
-
-Suporte para CPF, e-mail e celular.
-Validações rigorosas para cada tipo de chave conforme especificações do desafio.
-Limitação de 5 chaves para pessoa física e 20 chaves para pessoa jurídica.
-Prevenção de duplicidade de chaves para diferentes correntistas.
-Geração automática de UUID como identificador único da chave.
-Registro de data e hora no momento da criação.
-Alteração de Chaves PIX:
-
-Permite atualização de informações da conta vinculada.
-Restrições para impedir alteração de chaves inativas, tipo ou valor da chave.
-Validações específicas para tipo de conta, número da agência e conta, nome e sobrenome do correntista.
-Inativação de Chaves PIX:
-
-Chave inativada não pode ser alterada ou reutilizada.
-Registro de data e hora da inativação.
-Impede inativação de chaves já inativas com retorno de erro apropriado.
-Consultas de Chaves PIX:
-
-Consulta por ID (obrigatória).
-Consulta por tipo de chave e por agência e conta.
-Regras para impedir combinações inválidas de filtros e retorno adequado em caso de não encontrar registros.
-
 ## Inclusão
 
 ### Objetivo
