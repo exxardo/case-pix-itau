@@ -11,4 +11,3 @@ import org.springframework.stereotype.Repository;
 @Primary
 public interface H2ChavePixRepository extends ChavePixRepository {
 }
-

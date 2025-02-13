@@ -93,6 +93,9 @@ public class ChavePixService {
      */
     public List<ChavePixResponseDTO> consultarPorAgenciaEConta(int agencia, int conta) {
         List<ChavePix> chaves = repository.findByNumeroAgenciaAndNumeroConta(agencia, conta);
+
+        System.out.println("🔍 Consulta por Agência e Conta retornou: " + chaves);
+
         return chaves.stream()
                 .map(this::toResponseDTO)
                 .collect(Collectors.toList());
@@ -319,8 +322,27 @@ public class ChavePixService {
     public List<ChavePixResponseDTO> consultarPorNomeCorrentista(String nomeCorrentista) {
         List<ChavePix> chaves = repository.findByNomeCorrentistaContainingIgnoreCase(nomeCorrentista);
 
+        System.out.println("🔍 Consulta por Nome retornou: " + chaves);
+
         return chaves.stream()
                 .map(this::toResponseDTO) // Convertendo as chaves para o formato de resposta
                 .collect(Collectors.toList());
     }
+
+    public List<ChavePixResponseDTO> consultarPorFiltros(
+            String tipoChave, String valorChave, Integer agencia, Integer conta,
+            LocalDate dataInclusao, LocalDate dataInativacao) {
+
+        // Convertendo datas para LocalDateTime, pois o repositório espera LocalDateTime
+        LocalDateTime dataInclusaoInicio = (dataInclusao != null) ? dataInclusao.atStartOfDay() : null;
+        LocalDateTime dataInativacaoInicio = (dataInativacao != null) ? dataInativacao.atStartOfDay() : null;
+
+        // Chamada ao repositório, garantindo que os parâmetros estão na mesma ordem do método no Repository
+        List<ChavePix> chaves = repository.buscarPorFiltros(tipoChave, valorChave, agencia, conta, dataInclusaoInicio, dataInativacaoInicio);
+
+        return chaves.stream()
+                .map(this::toResponseDTO)
+                .collect(Collectors.toList());
+    }
+
 }

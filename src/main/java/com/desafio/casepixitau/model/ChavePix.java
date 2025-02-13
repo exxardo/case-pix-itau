@@ -42,8 +42,9 @@ public class ChavePix {
     private LocalDateTime dataHoraInativacao; // Data e hora da inativação da chave (caso tenha sido desativada)
 
     @Version
-    private Long version;  // Campo para controle de versão. Adicionado para que o Hibernate possa controlar corretamente as alterações concorrentes.
+    private Long version;  // Controle de versão para evitar concorrência otimista no banco de dados
 
+    // Getters e Setters
     public UUID getId() {
         return id;
     }
@@ -148,6 +149,4 @@ public class ChavePix {
                 ", version=" + version +
                 '}';
     }
-
 }
-
