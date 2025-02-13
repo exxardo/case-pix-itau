@@ -1,13 +1,11 @@
 package com.desafio.casepixitau.controller;
 
-import com.desafio.casepixitau.dto.ChavePixAlteracaoDTO;
-import com.desafio.casepixitau.dto.ChavePixRequestDTO;
-import com.desafio.casepixitau.dto.ChavePixResponseDTO;
-import com.desafio.casepixitau.dto.ErrorResponseDTO;
+import com.desafio.casepixitau.dto.*;
 import com.desafio.casepixitau.exception.ChavePixException;
 import com.desafio.casepixitau.service.ChavePixService;
 import com.desafio.casepixitau.util.HttpStatusCodes;
 import jakarta.validation.Valid;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -15,115 +13,101 @@ import java.time.LocalDate;
 import java.util.List;
 import java.util.UUID;
 
+/**
+ * Controlador para operações relacionadas a chaves PIX.
+ */
 @RestController
 @RequestMapping("/api/pix")
 public class ChavePixController {
 
     private final ChavePixService service;
 
+    /**
+     * Construtor do controlador, injeta a dependência do serviço.
+     *
+     * @param service Serviço responsável pelas operações da chave PIX.
+     */
     public ChavePixController(ChavePixService service) {
         this.service = service;
     }
 
     /**
-     * Endpoint para incluir uma nova chave PIX.
+     * Endpoint para inclusão de uma nova chave PIX.
      *
-     * @param dto Dados da chave PIX a ser cadastrada.
-     * @return Resposta contendo o ID gerado para a chave cadastrada.
+     * @param dto Objeto contendo os dados da chave a ser cadastrada.
+     * @return ResponseEntity contendo a chave cadastrada ou um erro de validação.
      */
     @PostMapping
-    public ResponseEntity<ChavePixResponseDTO> incluir(@Valid @RequestBody ChavePixRequestDTO dto) {
+    public ResponseEntity<?> incluir(@Valid @RequestBody ChavePixRequestDTO dto) {
         try {
             ChavePixResponseDTO response = service.incluir(dto);
             return ResponseEntity.status(HttpStatusCodes.SUCCESS).body(response);
         } catch (ChavePixException e) {
             return ResponseEntity.status(HttpStatusCodes.UNPROCESSABLE_ENTITY)
-                    .body(null);
-        }
-    }
-
-    /**
-     * Endpoint para alterar os dados de uma chave PIX existente.
-     *
-     * @param id  UUID da chave a ser alterada.
-     * @param dto Dados atualizados da chave PIX.
-     * @return Resposta contendo os dados atualizados da chave.
-     */
-    @PutMapping("/{id}")
-    public ResponseEntity<Object> alterar(@PathVariable UUID id,
-                                          @Valid @RequestBody ChavePixAlteracaoDTO dto) {
-        try {
-            // Lógica de alteração
-            ChavePixResponseDTO response = service.alterar(id, dto);
-
-            // Retorne a resposta sem o campo de dataHoraInativacao para a alteração
-            ChavePixAlteracaoDTO responseDTO = new ChavePixAlteracaoDTO();
-            responseDTO.setId(response.getId());
-            responseDTO.setTipoChave(response.getTipoChave());
-            responseDTO.setValorChave(response.getValorChave());
-            responseDTO.setTipoConta(response.getTipoConta());
-            responseDTO.setNumeroAgencia(response.getNumeroAgencia());
-            responseDTO.setNumeroConta(response.getNumeroConta());
-            responseDTO.setNomeCorrentista(response.getNomeCorrentista());
-            responseDTO.setSobrenomeCorrentista(response.getSobrenomeCorrentista());
-            responseDTO.setDataHoraInclusao(response.getDataHoraInclusao());
-
-            return ResponseEntity.status(HttpStatusCodes.SUCCESS).body(responseDTO);
-        } catch (ChavePixException e) {
-            return ResponseEntity.status(HttpStatusCodes.BAD_REQUEST)
                     .body(new ErrorResponseDTO(e.getMessage()));
         }
     }
 
     /**
-     * Endpoint para inativar uma chave PIX por ID.
+     * Endpoint para alteração de uma chave PIX existente.
      *
-     * @param id UUID da chave a ser inativada.
-     * @return Resposta contendo os dados da chave inativada.
+     * @param id  Identificador da chave a ser alterada.
+     * @param dto Objeto contendo os novos dados da chave.
+     * @return ResponseEntity com a chave alterada ou erro correspondente.
      */
-    @DeleteMapping("/{id}")
-    public ResponseEntity<?> inativar(@PathVariable UUID id) {
+    @PutMapping("/{id}")
+    public ResponseEntity<?> alterar(@PathVariable UUID id,
+                                     @Valid @RequestBody ChavePixAlteracaoDTO dto) {
         try {
-            // Chama o serviço para inativar e retorna a resposta com a data de inativação
-            ChavePixResponseDTO response = service.inativar(id);
+            ChavePixResponseDTO response = service.alterar(id, dto);
             return ResponseEntity.status(HttpStatusCodes.SUCCESS).body(response);
         } catch (ChavePixException e) {
-            // Em caso de erro (como chave já inativada), retornamos ErrorResponseDTO
-            ErrorResponseDTO errorResponse = new ErrorResponseDTO(e.getMessage());
-            return ResponseEntity.status(HttpStatusCodes.UNPROCESSABLE_ENTITY).body(errorResponse);
+            if (e.getMessage().contains("não encontrada")) {
+                return ResponseEntity.status(HttpStatusCodes.NOT_FOUND)
+                        .body(new ErrorResponseDTO(e.getMessage()));
+            } else {
+                return ResponseEntity.status(HttpStatusCodes.UNPROCESSABLE_ENTITY)
+                        .body(new ErrorResponseDTO(e.getMessage()));
+            }
         }
     }
 
     /**
-     * Consulta uma chave PIX pelo ID.
+     * Endpoint para inativação de uma chave PIX.
      *
-     * @param id UUID da chave PIX.
-     * @return Resposta contendo os dados da chave encontrada.
+     * @param id Identificador da chave a ser inativada.
+     * @return ResponseEntity contendo os dados da chave inativada ou erro correspondente.
+     */
+    @DeleteMapping("/{id}")
+    public ResponseEntity<?> inativar(@PathVariable UUID id) {
+        try {
+            ChavePixResponseDTO response = service.inativar(id);
+            return ResponseEntity.status(HttpStatusCodes.SUCCESS).body(response);
+        } catch (ChavePixException e) {
+            return ResponseEntity.status(HttpStatusCodes.UNPROCESSABLE_ENTITY)
+                    .body(new ErrorResponseDTO(e.getMessage()));
+        }
+    }
+
+    /**
+     * Consulta uma chave PIX pelo seu identificador único.
+     *
+     * @param id Identificador da chave PIX.
+     * @return ResponseEntity contendo os dados da chave consultada ou erro correspondente.
      */
     @GetMapping("/{id}")
-    public ResponseEntity<Object> consultarPorId(@PathVariable UUID id,
-                                                 @RequestParam(value = "tipo", required = false) String tipoChave,
-                                                 @RequestParam(value = "agencia", required = false) Integer agencia,
-                                                 @RequestParam(value = "conta", required = false) Integer conta,
-                                                 @RequestParam(value = "nome", required = false) String nomeCorrentista) {
-        // Verifica se algum filtro adicional foi passado ao consultar por ID
-        if (tipoChave != null || agencia != null || conta != null || nomeCorrentista != null) {
-            // Retorna erro 422 com a mensagem no corpo da resposta
-            ErrorResponseDTO errorResponse = new ErrorResponseDTO("Não é permitido informar parâmetros adicionais quando o ID for fornecido.");
-            return ResponseEntity.status(HttpStatusCodes.UNPROCESSABLE_ENTITY).body(errorResponse);
-        }
-
+    public ResponseEntity<?> consultarPorId(@PathVariable UUID id) {
         try {
             ChavePixResponseDTO response = service.consultarPorId(id);
             return ResponseEntity.status(HttpStatusCodes.SUCCESS).body(response);
         } catch (ChavePixException e) {
             return ResponseEntity.status(HttpStatusCodes.NOT_FOUND)
-                    .body(new ErrorResponseDTO("Chave PIX não encontrada para o ID informado."));
+                    .body(new ErrorResponseDTO(e.getMessage()));
         }
     }
 
     /**
-     * Consulta chaves PIX pelo tipo de chave (celular, email ou CPF).
+     * Consulta chaves PIX pelo tipo de chave.
      *
      * @param tipoChave Tipo da chave (celular, email ou CPF).
      * @return Lista de chaves PIX que correspondem ao tipo informado.
@@ -151,7 +135,7 @@ public class ChavePixController {
     }
 
     /**
-     * Consulta chaves PIX por data de inclusão ou inativação (não combinadas).
+     * Consulta chaves PIX por data de inclusão ou inativação.
      *
      * @param dataInclusao Data de inclusão da chave (opcional).
      * @param dataInativacao Data de inativação da chave (opcional).
@@ -162,19 +146,13 @@ public class ChavePixController {
             @RequestParam(value = "dataInclusao", required = false) LocalDate dataInclusao,
             @RequestParam(value = "dataInativacao", required = false) LocalDate dataInativacao) {
 
-        // Verifica se ambas as datas foram informadas
         if (dataInclusao != null && dataInativacao != null) {
-            // Retorna erro 422 com a mensagem no corpo da resposta
-            ErrorResponseDTO errorResponse = new ErrorResponseDTO("Não é permitido informar ambas as datas de inclusão e inativação ao mesmo tempo.");
-            return ResponseEntity.status(HttpStatusCodes.UNPROCESSABLE_ENTITY).body(errorResponse);
+            return ResponseEntity.status(HttpStatusCodes.UNPROCESSABLE_ENTITY)
+                    .body(new ErrorResponseDTO("Não é permitido informar ambas as datas ao mesmo tempo."));
         }
 
-        try {
-            List<ChavePixResponseDTO> response = service.consultarPorData(dataInclusao, dataInativacao);
-            return ResponseEntity.status(HttpStatusCodes.SUCCESS).body(response);
-        } catch (ChavePixException e) {
-            return ResponseEntity.status(HttpStatusCodes.NOT_FOUND).body(null);
-        }
+        List<ChavePixResponseDTO> response = service.consultarPorData(dataInclusao, dataInativacao);
+        return ResponseEntity.status(HttpStatusCodes.SUCCESS).body(response);
     }
 
     /**
@@ -186,6 +164,86 @@ public class ChavePixController {
     @GetMapping("/nome")
     public ResponseEntity<List<ChavePixResponseDTO>> consultarPorNomeCorrentista(@RequestParam("nome") String nomeCorrentista) {
         List<ChavePixResponseDTO> response = service.consultarPorNomeCorrentista(nomeCorrentista);
+        return ResponseEntity.status(HttpStatusCodes.SUCCESS).body(response);
+    }
+
+    /**
+     * Consulta uma chave PIX pelo identificador único (UUID). Se o ID for informado,
+     * nenhum outro filtro pode ser aceito. Caso contrário, retorna um erro 422.
+     *
+     * Retorna 200 se a chave for encontrada, 404 se não for encontrada,
+     * e 422 se filtros adicionais forem passados junto com o ID.
+     */
+    @GetMapping("/filtros/{id}")
+    public ResponseEntity<?> consultarPorId(
+            @PathVariable("id") UUID id,
+            @RequestParam(value = "tipo", required = false) String tipoChave,
+            @RequestParam(value = "valor", required = false) String valorChave,
+            @RequestParam(value = "agencia", required = false) Integer agencia,
+            @RequestParam(value = "conta", required = false) Integer conta,
+            @RequestParam(value = "dataInclusao", required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate dataInclusao,
+            @RequestParam(value = "dataInativacao", required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate dataInativacao) {
+
+        // Regra: Se o ID for informado, nenhum outro filtro pode ser aceito.
+        if (tipoChave != null || valorChave != null || agencia != null || conta != null || dataInclusao != null || dataInativacao != null) {
+            return ResponseEntity.status(HttpStatusCodes.UNPROCESSABLE_ENTITY)
+                    .body(new ErrorResponseDTO("Se o ID for informado, nenhum outro filtro pode ser aceito."));
+        }
+
+        try {
+            ChavePixResponseDTO response = service.consultarPorId(id);
+            return ResponseEntity.status(HttpStatusCodes.SUCCESS).body(response);
+        } catch (ChavePixException e) {
+            return ResponseEntity.status(HttpStatusCodes.NOT_FOUND)
+                    .body(new ErrorResponseDTO(e.getMessage()));
+        }
+    }
+
+    /**
+     * Consulta chaves PIX com base em filtros opcionais. Pelo menos um filtro deve ser informado,
+     * e não é permitido combinar filtros de data de inclusão e data de inativação ao mesmo tempo.
+     *
+     * @param tipoChave O tipo da chave PIX (opcional).
+     * @param valorChave O valor da chave PIX (opcional).
+     * @param agencia O número da agência bancária (opcional).
+     * @param conta O número da conta bancária (opcional).
+     * @param dataInclusao A data de inclusão da chave PIX (não pode ser combinada com dataInativacao).
+     * @param dataInativacao A data de inativação da chave PIX (não pode ser combinada com dataInclusao).
+     * @return {@code ResponseEntity} contendo a lista de chaves encontradas ou um erro adequado.
+     *         Retorna 200 se houver registros, 404 se nenhum registro for encontrado,
+     *         e 422 se nenhuma chave for informada ou se ambas as datas forem passadas juntas.
+     */
+    @GetMapping("/filtros")
+    public ResponseEntity<?> consultarPorFiltros(
+            @RequestParam(value = "tipo", required = false) String tipoChave,
+            @RequestParam(value = "valor", required = false) String valorChave,
+            @RequestParam(value = "agencia", required = false) Integer agencia,
+            @RequestParam(value = "conta", required = false) Integer conta,
+            @RequestParam(value = "dataInclusao", required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate dataInclusao,
+            @RequestParam(value = "dataInativacao", required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate dataInativacao) {
+
+        // Regra 1: Se nenhum filtro for informado, retorna 422
+        if (tipoChave == null && valorChave == null && agencia == null && conta == null && dataInclusao == null && dataInativacao == null) {
+            return ResponseEntity.status(HttpStatusCodes.UNPROCESSABLE_ENTITY)
+                    .body(new ErrorResponseDTO("Ao menos um filtro deve ser informado."));
+        }
+
+        // Regra 2: Se ambas as datas forem informadas, retorna 422
+        if (dataInclusao != null && dataInativacao != null) {
+            return ResponseEntity.status(HttpStatusCodes.UNPROCESSABLE_ENTITY)
+                    .body(new ErrorResponseDTO("Não é permitido informar ambas as datas ao mesmo tempo."));
+        }
+
+        List<ChavePixResponseDTO> response = service.consultarPorFiltros(
+                tipoChave, valorChave, agencia, conta, dataInclusao, dataInativacao
+        );
+
+        // Regra 3: Se nenhum registro for encontrado, retorna 404
+        if (response.isEmpty()) {
+            return ResponseEntity.status(HttpStatusCodes.NOT_FOUND)
+                    .body(new ErrorResponseDTO("Nenhum registro encontrado para os filtros informados."));
+        }
+
         return ResponseEntity.status(HttpStatusCodes.SUCCESS).body(response);
     }
 }

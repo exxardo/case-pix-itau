@@ -1,12 +1,14 @@
 package com.desafio.casepixitau.dto;
 
 import jakarta.validation.constraints.*;
+import lombok.AllArgsConstructor;
 import lombok.Data;
 
 /**
  * DTO para receber os dados de requisição para cadastro de uma Chave Pix.
  * Utiliza validações para garantir a integridade dos dados fornecidos.
  */
+@AllArgsConstructor
 @Data
 public class ChavePixRequestDTO {
 
@@ -60,6 +62,10 @@ public class ChavePixRequestDTO {
      * Sobrenome do titular da conta (opcional).
      */
     private String sobrenomeCorrentista;
+
+    public ChavePixRequestDTO() {
+
+    }
 
     /**
      * Validação personalizada para garantir que o email esteja no formato correto quando o tipoChave for 'email'.
